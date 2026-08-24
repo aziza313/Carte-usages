@@ -24,11 +24,11 @@
   --texte:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%}
 body{
   margin:0;background:var(--creme);color:var(--encre);
   font-family:var(--texte);font-size:15px;line-height:1.45;
-  display:flex;flex-direction:column;-webkit-text-size-adjust:100%;
+  display:flex;flex-direction:column;overflow:hidden;-webkit-text-size-adjust:100%;
 }
 
 /* ---------- bandeau ---------- */
@@ -50,7 +50,16 @@ body{
   color:#fff;padding:6px 12px;border-radius:999px;white-space:nowrap;
 }
 
-/* ---------- carte ---------- */
+/* ---------- barre d'info (flux normal, sous le bandeau) ---------- */
+.barre-info{
+  flex:0 0 auto;background:var(--papier);border-bottom:1px solid var(--ligne);
+  padding:10px 16px;font-size:13px;color:var(--encre-doux);position:relative;z-index:15;
+}
+.barre-info strong{color:var(--encre);font-family:var(--titre);font-weight:600;margin-right:6px}
+.barre-info.mode-dessin{background:var(--encre);color:#fff;border-bottom-color:var(--encre)}
+.barre-info.mode-dessin strong{color:#fff}
+
+/* ---------- carte (occupe tout l'espace restant) ---------- */
 main{flex:1 1 auto;position:relative;min-height:0}
 #carte{position:absolute;inset:0;background:#DDEBF2}
 
@@ -63,70 +72,31 @@ main{flex:1 1 auto;position:relative;min-height:0}
   font-family:var(--texte);padding:8px 10px !important;
 }
 .leaflet-bar{border:none !important;box-shadow:var(--ombre) !important;border-radius:12px !important;overflow:hidden}
-
-.barre-actions{
-  position:fixed;left:16px;right:16px;bottom:52px;z-index:15;
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-}
-
-.bouton-flottant{
-  z-index:15;background:var(--papier);color:var(--encre);
-  border:2.5px solid #fff;border-radius:999px;padding:9.5px 17px;font-family:var(--texte);font-weight:800;font-size:13.5px;
-  box-shadow:0 2px 0 rgba(43,33,24,.12),0 8px 22px -6px rgba(43,33,24,.45);
-  cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
-}
-.bouton-flottant:hover{background:#FFF3E4}
-.bouton-flottant.principal{background:var(--corail);color:#fff;border-color:#fff}
-.bouton-flottant.principal:hover{background:var(--corail-sombre)}
-.bouton-flottant.cache{display:none}
-
-#btn-dessiner{margin-left:auto}
-#btn-dessiner.actif{background:var(--encre);color:#fff}
-
-.info-coin{
-  position:fixed;right:16px;top:calc(var(--h-bandeau, 76px) + 16px);z-index:15;background:var(--papier);
-  border:1px solid var(--ligne);border-radius:var(--rayon);
-  box-shadow:0 2px 0 rgba(43,33,24,.08),0 8px 22px -6px rgba(43,33,24,.4);padding:14px 16px;max-width:250px;
-  font-size:13px;color:var(--encre-doux);transition:opacity .15s;
-}
-.info-coin strong{display:block;color:var(--encre);font-family:var(--titre);font-weight:600;font-size:15px;margin-bottom:4px}
-@media (max-width:640px){ .info-coin{max-width:min(78vw,260px)} }
-.info-coin.masquee{opacity:0;pointer-events:none}
-
-/* ---------- dessin du quartier ---------- */
 #carte.mode-dessin{cursor:crosshair;touch-action:none}
 #carte.mode-dessin .leaflet-container{cursor:crosshair}
 
-.bulle-dessin{
-  position:fixed;left:50%;top:calc(var(--h-bandeau, 76px) + 16px);transform:translateX(-50%);z-index:16;
-  background:var(--encre);color:#fff;border:2.5px solid #fff;border-radius:18px;padding:8px 16px;
-  font-size:12.5px;font-weight:700;box-shadow:0 8px 22px -6px rgba(43,33,24,.5);display:none;align-items:center;gap:10px;
-  max-width:min(88vw,360px);text-align:center;
+/* ---------- barre du bas (flux normal, toujours visible) ---------- */
+.barre-bas{
+  flex:0 0 auto;background:var(--papier);border-top:1px solid var(--ligne);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  box-shadow:0 -6px 16px -10px rgba(43,33,24,.3);position:relative;z-index:20;
 }
-.bulle-dessin span{flex:1}
-.bulle-dessin.visible{display:inline-flex}
-.bulle-dessin button{
-  background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:999px;
-  padding:5px 12px;font-family:var(--texte);font-weight:800;font-size:12px;cursor:pointer;
-}
-.bulle-dessin button:hover{background:rgba(255,255,255,.3)}
+.groupe-bas{display:flex;align-items:center;gap:10px;width:100%}
+.groupe-bas[hidden]{display:none}
+.surface-info{font-family:var(--titre);font-weight:600;font-size:14.5px;color:var(--encre);flex:1;min-width:0}
+.surface-info b{color:var(--corail)}
 
-.panneau-quartier{
-  position:fixed;left:50%;bottom:52px;transform:translateX(-50%);z-index:16;
-  background:var(--papier);border:1px solid var(--ligne);border-radius:var(--rayon);
-  box-shadow:0 2px 0 rgba(43,33,24,.08),0 10px 26px -6px rgba(43,33,24,.45);
-  padding:16px 18px;display:none;flex-direction:column;align-items:center;gap:10px;text-align:center;
-  max-width:min(90vw,340px);
+button.bouton-flottant{
+  background:var(--papier);color:var(--encre);
+  border:2px solid var(--ligne);border-radius:999px;padding:11px 18px;font-family:var(--texte);font-weight:800;font-size:13.5px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;flex:0 0 auto;
 }
-.panneau-quartier.visible{display:flex}
-.panneau-quartier .surface{font-family:var(--titre);font-weight:600;font-size:16px;color:var(--encre)}
-.panneau-quartier .surface b{color:var(--corail)}
-.panneau-quartier .sous-texte{font-size:12.5px;color:var(--encre-doux)}
-.panneau-quartier .rangee{display:flex;gap:8px;width:100%}
-.panneau-quartier .rangee button{flex:1;padding:10px 14px;font-size:13px}
-
-@keyframes pouls{0%,100%{opacity:1}50%{opacity:.55}}
-.point-actif{animation:pouls 1s ease-in-out infinite}
+button.bouton-flottant:hover{background:#FFF3E4}
+button.bouton-flottant.principal{background:var(--corail);color:#fff;border-color:var(--corail)}
+button.bouton-flottant.principal:hover{background:var(--corail-sombre);border-color:var(--corail-sombre)}
+button.bouton-flottant.sombre{background:var(--encre);color:#fff;border-color:var(--encre)}
+#btn-dessiner{margin-left:auto}
+#groupe-carte #btn-recentrer{flex:0 0 auto}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -141,44 +111,29 @@ main{flex:1 1 auto;position:relative;min-height:0}
   </div>
 </header>
 
+<div class="barre-info" id="barre-info">
+  <strong>Zoome sur ton coin</strong>
+  <span id="texte-info">Balade-toi sur la carte et rapproche-toi de l'endroit dont tu veux parler, puis touche « Mon quartier » en bas.</span>
+</div>
+
 <main>
   <div id="carte" role="application" aria-label="Carte de Lausanne. Déplace-toi et zoome pour choisir la zone qui t'intéresse, puis dessine les limites de ton quartier."></div>
+</main>
 
-  <div class="barre-actions">
+<footer class="barre-bas">
+  <div class="groupe-bas" id="groupe-carte">
     <button type="button" class="bouton-flottant principal" id="btn-recentrer">↺ Recentrer</button>
     <button type="button" class="bouton-flottant principal" id="btn-dessiner">✏️ Mon quartier</button>
   </div>
-
-  <div class="info-coin" id="info-coin">
-    <strong>Zoome sur ton coin</strong>
-    Balade-toi sur la carte et rapproche-toi de l'endroit dont tu veux parler, puis clique sur « Dessine ton quartier ».
+  <div class="groupe-bas" id="groupe-quartier" hidden>
+    <div class="surface-info" id="texte-surface">Ton quartier fait environ <b>0 m²</b></div>
+    <button type="button" class="bouton-flottant" id="btn-recommencer">↺ Refaire</button>
+    <button type="button" class="bouton-flottant principal" id="btn-valider-quartier">✓ Valider</button>
   </div>
-
-  <div class="bulle-dessin" id="bulle-dessin">
-    <span>✏️ Trace le contour avec ta souris ou ton doigt — pas besoin d'être précis·e !</span>
-    <button type="button" id="btn-annuler-dessin">Annuler</button>
-  </div>
-
-  <div class="panneau-quartier" id="panneau-quartier">
-    <div class="surface" id="texte-surface">Ton quartier fait environ <b>0 m²</b></div>
-    <div class="sous-texte">C'est ta perception qui compte, pas une limite officielle 🙂</div>
-    <div class="rangee">
-      <button type="button" class="bouton-flottant" id="btn-recommencer">↺ Recommencer</button>
-      <button type="button" class="bouton-flottant principal" id="btn-valider-quartier">✓ Valider mon quartier</button>
-    </div>
-  </div>
-</main>
+</footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-function majHauteurBandeau() {
-  const h = document.querySelector('.bandeau').getBoundingClientRect().height;
-  document.documentElement.style.setProperty('--h-bandeau', h + 'px');
-}
-majHauteurBandeau();
-window.addEventListener('resize', majHauteurBandeau);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(majHauteurBandeau);
-
 const LAUSANNE_CENTRE = [46.5197, 6.6323];
 const LAUSANNE_ZOOM_DEPART = 14;
 
@@ -218,12 +173,15 @@ document.getElementById('btn-recentrer').addEventListener('click', function () {
 const carteEl = carte.getContainer();
 const boutonDessiner = document.getElementById('btn-dessiner');
 const boutonRecentrer = document.getElementById('btn-recentrer');
-const bulleDessin = document.getElementById('bulle-dessin');
-const texteBulleDessin = bulleDessin.querySelector('span');
-const infoCoin = document.getElementById('info-coin');
-const panneauQuartier = document.getElementById('panneau-quartier');
+const barreInfo = document.getElementById('barre-info');
+const texteInfo = document.getElementById('texte-info');
+const groupeCarte = document.getElementById('groupe-carte');
+const groupeQuartier = document.getElementById('groupe-quartier');
 const texteSurface = document.getElementById('texte-surface');
-const MESSAGE_BULLE_DEFAUT = texteBulleDessin.textContent;
+
+const MESSAGE_IDLE = texteInfo.textContent;
+const MESSAGE_DESSIN = "Trace le contour avec ta souris ou ton doigt — pas besoin d'être précis·e ! Touche « Annuler » pour arrêter.";
+const MESSAGE_TROP_PETIT = 'Trace un contour un peu plus grand 🙂 Réessaie !';
 
 let modeDessin = false;
 let enTrainDeTracer = false;
@@ -265,15 +223,15 @@ function demarrerDessin() {
   carte.dragging.disable();
   carte.doubleClickZoom.disable();
   if (carte.tap) carte.tap.disable();
-  boutonDessiner.classList.remove('cache');
-  boutonDessiner.classList.add('actif');
-  boutonDessiner.textContent = '✕ Annuler le dessin';
-  boutonRecentrer.classList.add('cache');
-  infoCoin.classList.add('masquee');
-  panneauQuartier.classList.remove('visible');
-  texteBulleDessin.textContent = MESSAGE_BULLE_DEFAUT;
-  bulleDessin.classList.add('visible');
+  boutonDessiner.classList.add('sombre');
+  boutonDessiner.textContent = '✕ Annuler';
+  boutonRecentrer.hidden = true;
+  groupeQuartier.hidden = true;
+  groupeCarte.hidden = false;
+  barreInfo.classList.add('mode-dessin');
+  texteInfo.textContent = MESSAGE_DESSIN;
   carteEl.addEventListener('pointerdown', surPointerDown);
+  carte.invalidateSize();
 }
 
 function arreterModeDessin() {
@@ -283,9 +241,9 @@ function arreterModeDessin() {
   carte.dragging.enable();
   carte.doubleClickZoom.enable();
   if (carte.tap) carte.tap.enable();
-  boutonDessiner.classList.remove('actif');
+  boutonDessiner.classList.remove('sombre');
   boutonDessiner.textContent = '✏️ Mon quartier';
-  bulleDessin.classList.remove('visible');
+  boutonRecentrer.hidden = false;
   carteEl.removeEventListener('pointerdown', surPointerDown);
   carteEl.removeEventListener('pointermove', surPointerMove);
   window.removeEventListener('pointerup', surPointerUp);
@@ -295,15 +253,14 @@ function annulerDessin() {
   if (ligneTrace) { ligneTrace.remove(); ligneTrace = null; }
   pointsTrace = [];
   arreterModeDessin();
-  boutonRecentrer.classList.remove('cache');
-  if (!quartierValide) infoCoin.classList.remove('masquee');
+  barreInfo.classList.remove('mode-dessin');
+  texteInfo.textContent = MESSAGE_IDLE;
 }
 
 boutonDessiner.addEventListener('click', function () {
   if (modeDessin) { annulerDessin(); return; }
   demarrerDessin();
 });
-document.getElementById('btn-annuler-dessin').addEventListener('click', annulerDessin);
 
 function surPointerDown(e) {
   if (!modeDessin) return;
@@ -342,32 +299,34 @@ function terminerTrace() {
   if (pointsTrace.length < 4) {
     if (ligneTrace) { ligneTrace.remove(); ligneTrace = null; }
     pointsTrace = [];
-    texteBulleDessin.textContent = 'Trace un contour un peu plus grand 🙂 Réessaie !';
-    setTimeout(function () { texteBulleDessin.textContent = MESSAGE_BULLE_DEFAUT; }, 1800);
+    texteInfo.textContent = MESSAGE_TROP_PETIT;
+    setTimeout(function () { if (modeDessin) texteInfo.textContent = MESSAGE_DESSIN; }, 1800);
     return;
   }
   if (ligneTrace) { ligneTrace.remove(); ligneTrace = null; }
   quartierPolygone = L.polygon(pointsTrace, {
     color: '#3FA9E0', weight: 3, fillColor: '#3FA9E0', fillOpacity: .22, lineJoin: 'round', dashArray: '1 8'
   }).addTo(carte);
-  texteSurface.innerHTML = 'Ton quartier fait environ <b>' + formaterSurface(surfaceApprox(pointsTrace)) + '</b>';
-  panneauQuartier.classList.add('visible');
-  boutonRecentrer.classList.add('cache');
-  boutonDessiner.classList.add('cache');
   arreterModeDessin();
+  barreInfo.classList.remove('mode-dessin');
+  texteInfo.textContent = "C'est ta perception qui compte, pas une limite officielle 🙂";
+  texteSurface.innerHTML = 'Ton quartier fait environ <b>' + formaterSurface(surfaceApprox(pointsTrace)) + '</b>';
+  groupeCarte.hidden = true;
+  groupeQuartier.hidden = false;
 }
 
 document.getElementById('btn-recommencer').addEventListener('click', function () {
   if (quartierPolygone) { quartierPolygone.remove(); quartierPolygone = null; }
-  panneauQuartier.classList.remove('visible');
+  groupeQuartier.hidden = true;
+  groupeCarte.hidden = false;
   demarrerDessin();
 });
 
 document.getElementById('btn-valider-quartier').addEventListener('click', function () {
   quartierValide = true;
-  panneauQuartier.classList.remove('visible');
-  boutonRecentrer.classList.remove('cache');
-  boutonDessiner.classList.remove('cache');
+  groupeQuartier.hidden = true;
+  groupeCarte.hidden = false;
+  texteInfo.textContent = MESSAGE_IDLE;
   if (quartierPolygone) quartierPolygone.setStyle({ dashArray: null, fillOpacity: .14 });
   // l'étape suivante (ajout des points d'usage) viendra se brancher ici
 });
