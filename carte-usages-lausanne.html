@@ -24,6 +24,7 @@
   --texte:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{height:100%}
 body{
   margin:0;background:var(--creme);color:var(--encre);
@@ -95,8 +96,42 @@ button.bouton-flottant:hover{background:#FFF3E4}
 button.bouton-flottant.principal{background:var(--corail);color:#fff;border-color:var(--corail)}
 button.bouton-flottant.principal:hover{background:var(--corail-sombre);border-color:var(--corail-sombre)}
 button.bouton-flottant.sombre{background:var(--encre);color:#fff;border-color:var(--encre)}
+button.bouton-flottant.large{flex:1;justify-content:center}
+button.bouton-flottant:disabled{opacity:.4;cursor:not-allowed}
 #btn-dessiner{margin-left:auto}
 #groupe-carte #btn-recentrer{flex:0 0 auto}
+
+/* ---------- tiroir d'édition d'un lieu ---------- */
+.tiroir{
+  flex:0 0 auto;background:var(--papier);border-top:1px solid var(--ligne);
+  max-height:52vh;overflow-y:auto;position:relative;z-index:20;
+  box-shadow:0 -6px 16px -10px rgba(43,33,24,.3);
+}
+.tiroir[hidden]{display:none}
+.tiroir-entete{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 16px;position:sticky;top:0;background:var(--papier);border-bottom:1px solid var(--ligne);
+}
+.tiroir-entete strong{font-family:var(--titre);font-weight:600;font-size:15.5px}
+.lien-fermer{background:none;border:none;color:var(--encre-doux);font-family:var(--texte);font-weight:700;font-size:13px;cursor:pointer;padding:4px}
+.tiroir-corps{padding:14px 16px}
+.etiquette-champ{
+  font-family:var(--texte);font-weight:800;font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--encre-doux);margin:0 0 8px;
+}
+.grille-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip-categorie{
+  border:2px solid var(--ligne);background:var(--papier);border-radius:999px;padding:8px 14px 8px 10px;
+  font-family:var(--texte);font-weight:700;font-size:13px;color:var(--encre);cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.chip-categorie .puce{font-size:16px;line-height:1}
+.chip-categorie[aria-pressed="true"]{color:#fff;border-color:transparent}
+textarea#note-point{
+  width:100%;border:2px solid var(--ligne);border-radius:14px;padding:10px 12px;font-family:var(--texte);
+  font-size:14px;color:var(--encre);resize:vertical;min-height:56px;
+}
+.tiroir-actions{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--ligne)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -107,7 +142,7 @@ button.bouton-flottant.sombre{background:var(--encre);color:#fff;border-color:va
   <span class="bulle">🗺️</span>
   <h1>Carte des usages<span>Ville de Lausanne</span></h1>
   <div class="pousse">
-    <span class="pastille-etape">Étape 1 · Choisis ton coin de la ville</span>
+    <span class="pastille-etape" id="pastille-etape">Étape 1 · Choisis ton coin de la ville</span>
   </div>
 </header>
 
@@ -120,6 +155,23 @@ button.bouton-flottant.sombre{background:var(--encre);color:#fff;border-color:va
   <div id="carte" role="application" aria-label="Carte de Lausanne. Déplace-toi et zoome pour choisir la zone qui t'intéresse, puis dessine les limites de ton quartier."></div>
 </main>
 
+<section class="tiroir" id="tiroir-point" hidden>
+  <div class="tiroir-entete">
+    <strong id="tiroir-titre">Ce lieu</strong>
+    <button type="button" class="lien-fermer" id="btn-fermer-tiroir">✕ Fermer</button>
+  </div>
+  <div class="tiroir-corps">
+    <p class="etiquette-champ">Qu'est-ce que tu y fais ? (choisis-en un ou plusieurs)</p>
+    <div class="grille-chips" id="grille-categories"></div>
+    <p class="etiquette-champ">Une précision ? (optionnel)</p>
+    <textarea id="note-point" placeholder="Ex. le mercredi après l'école, plutôt le soir…" rows="2"></textarea>
+  </div>
+  <div class="tiroir-actions">
+    <button type="button" class="bouton-flottant" id="btn-supprimer-point" hidden>🗑️ Supprimer</button>
+    <button type="button" class="bouton-flottant principal large" id="btn-enregistrer-point" disabled>✓ Enregistrer ce lieu</button>
+  </div>
+</section>
+
 <footer class="barre-bas">
   <div class="groupe-bas" id="groupe-carte">
     <button type="button" class="bouton-flottant principal" id="btn-recentrer">↺ Recentrer</button>
@@ -129,6 +181,10 @@ button.bouton-flottant.sombre{background:var(--encre);color:#fff;border-color:va
     <div class="surface-info" id="texte-surface">Ton quartier fait environ <b>0 m²</b></div>
     <button type="button" class="bouton-flottant" id="btn-recommencer">↺ Refaire</button>
     <button type="button" class="bouton-flottant principal" id="btn-valider-quartier">✓ Valider</button>
+  </div>
+  <div class="groupe-bas" id="groupe-points" hidden>
+    <div class="surface-info" id="texte-compteur">Aucun lieu ajouté pour l'instant</div>
+    <button type="button" class="bouton-flottant principal" id="btn-ajouter-point">➕ Ajouter un lieu</button>
   </div>
 </footer>
 
@@ -324,11 +380,178 @@ document.getElementById('btn-recommencer').addEventListener('click', function ()
 
 document.getElementById('btn-valider-quartier').addEventListener('click', function () {
   quartierValide = true;
-  groupeQuartier.hidden = true;
-  groupeCarte.hidden = false;
-  texteInfo.textContent = MESSAGE_IDLE;
   if (quartierPolygone) quartierPolygone.setStyle({ dashArray: null, fillOpacity: .14 });
-  // l'étape suivante (ajout des points d'usage) viendra se brancher ici
+  passerEtapePoints();
+});
+
+/* ============================================================================
+   ÉTAPE 3 · ajout des lieux d'usage
+   ========================================================================== */
+const CATEGORIES = [
+  { cle:'enfants',  emoji:'👶', label:"J'y accompagne mes enfants",        couleur:'#1D5FC7' },
+  { cle:'amis',     emoji:'🧑‍🤝‍🧑', label:"J'y retrouve mes amis",  couleur:'#8A3FBE' },
+  { cle:'apero',    emoji:'🍹', label:"J'y prends l'apéro / je sors le soir", couleur:'#D07C1B' },
+  { cle:'manger',   emoji:'🍽️', label:"J'y mange",                        couleur:'#C13F8C' },
+  { cle:'courses',  emoji:'🛍️', label:"J'y fais mes courses",             couleur:'#0E8F82' },
+  { cle:'sport',    emoji:'🏃', label:"J'y bouge, j'y fais du sport",      couleur:'#3F8F2E' },
+  { cle:'repos',    emoji:'🌳', label:"Je m'y pose, je me repose",         couleur:'#2B7C94' },
+  { cle:'travail',  emoji:'🛠️', label:"J'y travaille",                    couleur:'#6B6B63' },
+  { cle:'habite',   emoji:'🏠', label:"J'y habite",                       couleur:'#9C5A2E' },
+  { cle:'passage',  emoji:'🚶', label:"Je ne fais qu'y passer",            couleur:'#8A96A3' },
+  { cle:'evite',    emoji:'🚫', label:"Je l'évite (insécurité, malaise)",  couleur:'#B2264A' },
+  { cle:'degrade',  emoji:'🔇', label:'Je le trouve dégradé, bruyant ou sale', couleur:'#5C5248' },
+  { cle:'autre',    emoji:'✏️', label:'Autre',                            couleur:'#8A7A68' }
+];
+function categorieParCle(cle) { return CATEGORIES.find(function (c) { return c.cle === cle; }); }
+
+const pastilleEtape = document.getElementById('pastille-etape');
+const groupePoints = document.getElementById('groupe-points');
+const texteCompteur = document.getElementById('texte-compteur');
+const boutonAjouterPoint = document.getElementById('btn-ajouter-point');
+const tiroirPoint = document.getElementById('tiroir-point');
+const tiroirTitre = document.getElementById('tiroir-titre');
+const grilleCategories = document.getElementById('grille-categories');
+const notePointEl = document.getElementById('note-point');
+const boutonEnregistrerPoint = document.getElementById('btn-enregistrer-point');
+const boutonSupprimerPoint = document.getElementById('btn-supprimer-point');
+
+const MESSAGE_POINTS_IDLE = "Touche « Ajouter un lieu », puis touche la carte à l'endroit qui compte pour toi.";
+const MESSAGE_POINTS_ACTIF = 'Touche la carte pour placer un lieu. Tu peux en ajouter autant que tu veux.';
+
+let points = [];
+let compteurId = 0;
+let modeAjoutPoint = false;
+let pointEnEdition = null; // point existant en cours d'édition, ou null si nouveau
+let brouillonCategories = [];
+const coucheMarqueurs = L.layerGroup().addTo(carte);
+
+CATEGORIES.forEach(function (cat) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip-categorie'; b.dataset.cle = cat.cle;
+  b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = '<span class="puce">' + cat.emoji + '</span>' + cat.label;
+  b.addEventListener('click', function () {
+    const i = brouillonCategories.indexOf(cat.cle);
+    if (i >= 0) brouillonCategories.splice(i, 1); else brouillonCategories.push(cat.cle);
+    rafraichirChips();
+  });
+  grilleCategories.appendChild(b);
+});
+
+function rafraichirChips() {
+  grilleCategories.querySelectorAll('.chip-categorie').forEach(function (b) {
+    const actif = brouillonCategories.indexOf(b.dataset.cle) >= 0;
+    b.setAttribute('aria-pressed', String(actif));
+    const cat = categorieParCle(b.dataset.cle);
+    b.style.background = actif ? cat.couleur : '';
+    b.style.borderColor = actif ? cat.couleur : '';
+  });
+  boutonEnregistrerPoint.disabled = brouillonCategories.length === 0;
+}
+
+function icônePoint(categories) {
+  const cat = categorieParCle(categories[0]) || CATEGORIES[CATEGORIES.length - 1];
+  return L.divIcon({
+    className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+    html: '<div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);' +
+      'background:' + cat.couleur + ';border:2.5px solid #fff;box-shadow:0 2px 6px rgba(43,33,24,.4);' +
+      'display:flex;align-items:center;justify-content:center;">' +
+      '<span style="transform:rotate(45deg);font-size:16px;">' + cat.emoji + '</span></div>'
+  });
+}
+
+function dessinerPoints() {
+  coucheMarqueurs.clearLayers();
+  points.forEach(function (p) {
+    const m = L.marker([p.lat, p.lng], { icon: icônePoint(p.categories) });
+    m.on('click', function () { ouvrirTiroirPoint(p); });
+    coucheMarqueurs.addLayer(m);
+  });
+  const n = points.length;
+  texteCompteur.textContent = n === 0 ? 'Aucun lieu ajouté pour l\'instant' : n + (n > 1 ? ' lieux ajoutés' : ' lieu ajouté');
+}
+
+function passerEtapePoints() {
+  groupeCarte.hidden = true;
+  groupeQuartier.hidden = true;
+  groupePoints.hidden = false;
+  pastilleEtape.textContent = 'Étape 3 · Ajoute tes lieux';
+  barreInfo.classList.remove('mode-dessin');
+  texteInfo.textContent = MESSAGE_POINTS_IDLE;
+  dessinerPoints();
+}
+
+function activerModeAjout() {
+  modeAjoutPoint = true;
+  boutonAjouterPoint.classList.add('sombre');
+  boutonAjouterPoint.textContent = '✕ Terminer';
+  texteInfo.textContent = MESSAGE_POINTS_ACTIF;
+}
+function desactiverModeAjout() {
+  modeAjoutPoint = false;
+  boutonAjouterPoint.classList.remove('sombre');
+  boutonAjouterPoint.textContent = '➕ Ajouter un lieu';
+  texteInfo.textContent = MESSAGE_POINTS_IDLE;
+}
+boutonAjouterPoint.addEventListener('click', function () {
+  if (modeAjoutPoint) desactiverModeAjout(); else activerModeAjout();
+});
+
+function ouvrirTiroirNouveauPoint(latlng) {
+  pointEnEdition = { lat: latlng.lat, lng: latlng.lng };
+  brouillonCategories = [];
+  notePointEl.value = '';
+  tiroirTitre.textContent = 'Ce lieu';
+  boutonSupprimerPoint.hidden = true;
+  rafraichirChips();
+  groupePoints.hidden = true;
+  tiroirPoint.hidden = false;
+  tiroirPoint.scrollTop = 0;
+  carte.invalidateSize();
+}
+function ouvrirTiroirPoint(p) {
+  pointEnEdition = p;
+  brouillonCategories = p.categories.slice();
+  notePointEl.value = p.note || '';
+  tiroirTitre.textContent = 'Modifier ce lieu';
+  boutonSupprimerPoint.hidden = false;
+  rafraichirChips();
+  groupePoints.hidden = true;
+  tiroirPoint.hidden = false;
+  tiroirPoint.scrollTop = 0;
+  carte.invalidateSize();
+}
+function fermerTiroir() {
+  pointEnEdition = null;
+  tiroirPoint.hidden = true;
+  groupePoints.hidden = false;
+  carte.invalidateSize();
+}
+document.getElementById('btn-fermer-tiroir').addEventListener('click', fermerTiroir);
+
+boutonEnregistrerPoint.addEventListener('click', function () {
+  if (!pointEnEdition || brouillonCategories.length === 0) return;
+  const note = notePointEl.value.trim();
+  const existant = points.find(function (p) { return p === pointEnEdition; });
+  if (existant) {
+    existant.categories = brouillonCategories.slice();
+    existant.note = note;
+  } else {
+    points.push({ id: ++compteurId, lat: pointEnEdition.lat, lng: pointEnEdition.lng, categories: brouillonCategories.slice(), note: note });
+  }
+  fermerTiroir();
+  dessinerPoints();
+});
+
+boutonSupprimerPoint.addEventListener('click', function () {
+  points = points.filter(function (p) { return p !== pointEnEdition; });
+  fermerTiroir();
+  dessinerPoints();
+});
+
+carte.on('click', function (e) {
+  if (!modeAjoutPoint || modeDessin) return;
+  ouvrirTiroirNouveauPoint(e.latlng);
 });
 
 setTimeout(function () { carte.invalidateSize(); }, 150);
