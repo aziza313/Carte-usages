@@ -71,11 +71,12 @@ main{flex:1 1 auto;position:relative;min-height:0}
 
 .bouton-flottant{
   z-index:15;background:var(--papier);color:var(--encre);
-  border:none;border-radius:999px;padding:11px 18px;font-family:var(--texte);font-weight:800;font-size:13.5px;
-  box-shadow:var(--ombre);cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+  border:2.5px solid #fff;border-radius:999px;padding:9.5px 17px;font-family:var(--texte);font-weight:800;font-size:13.5px;
+  box-shadow:0 2px 0 rgba(43,33,24,.12),0 8px 22px -6px rgba(43,33,24,.45);
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
 }
 .bouton-flottant:hover{background:#FFF3E4}
-.bouton-flottant.principal{background:var(--corail);color:#fff}
+.bouton-flottant.principal{background:var(--corail);color:#fff;border-color:#fff}
 .bouton-flottant.principal:hover{background:var(--corail-sombre)}
 .bouton-flottant.cache{display:none}
 
@@ -84,7 +85,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
 
 .info-coin{
   position:absolute;right:16px;top:16px;z-index:15;background:var(--papier);
-  border-radius:var(--rayon);box-shadow:var(--ombre);padding:14px 16px;max-width:250px;
+  border:1px solid var(--ligne);border-radius:var(--rayon);
+  box-shadow:0 2px 0 rgba(43,33,24,.08),0 8px 22px -6px rgba(43,33,24,.4);padding:14px 16px;max-width:250px;
   font-size:13px;color:var(--encre-doux);transition:opacity .15s;
 }
 .info-coin strong{display:block;color:var(--encre);font-family:var(--titre);font-weight:600;font-size:15px;margin-bottom:4px}
@@ -97,8 +99,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
 
 .bulle-dessin{
   position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:16;
-  background:var(--encre);color:#fff;border-radius:18px;padding:10px 16px;
-  font-size:12.5px;font-weight:700;box-shadow:var(--ombre);display:none;align-items:center;gap:10px;
+  background:var(--encre);color:#fff;border:2.5px solid #fff;border-radius:18px;padding:8px 16px;
+  font-size:12.5px;font-weight:700;box-shadow:0 8px 22px -6px rgba(43,33,24,.5);display:none;align-items:center;gap:10px;
   max-width:min(88vw,360px);text-align:center;
 }
 .bulle-dessin span{flex:1}
@@ -111,7 +113,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
 
 .panneau-quartier{
   position:absolute;left:50%;bottom:52px;transform:translateX(-50%);z-index:16;
-  background:var(--papier);border-radius:var(--rayon);box-shadow:var(--ombre);
+  background:var(--papier);border:1px solid var(--ligne);border-radius:var(--rayon);
+  box-shadow:0 2px 0 rgba(43,33,24,.08),0 10px 26px -6px rgba(43,33,24,.45);
   padding:16px 18px;display:none;flex-direction:column;align-items:center;gap:10px;text-align:center;
   max-width:min(90vw,340px);
 }
