@@ -1,0 +1,885 @@
+<title>Carte des usages des Falaises</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#EDF0E9; --surface:#FFFFFF; --surface-2:#E1E6DB;
+    --ink-900:#1E2B22; --ink-600:#55645A; --ink-400:#8A968C;
+    --line:#CBD2C4; --line-strong:#B4BDAB;
+    --accent:#C1552B; --accent-strong:#9C4220; --accent-soft:#F3DCCB; --accent-ink:#FFFFFF;
+    --shadow: 0 1px 2px rgba(30,43,34,.06), 0 8px 24px -12px rgba(30,43,34,.25);
+    --radius: 14px;
+    --u-commerce:#1D5FC7; --u-restauration:#D07C1B; --u-habitat:#8A3FBE; --u-bureaux:#0E8F82;
+    --u-equipement:#B2264A; --u-espace_public:#1489AE; --u-espace_vert:#3F8F2E;
+    --u-loisirs:#C13F8C; --u-friche:#9C5A2E; --u-autre:#6B6B63;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#121D17; --surface:#1A2620; --surface-2:#223229;
+      --ink-900:#E9EEE5; --ink-600:#A7B4A0; --ink-400:#7C8B7F;
+      --line:#33463A; --line-strong:#455A4B;
+      --accent:#E7834C; --accent-strong:#F3A06B; --accent-soft:#3A2A1E; --accent-ink:#20140C;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#121D17; --surface:#1A2620; --surface-2:#223229;
+    --ink-900:#E9EEE5; --ink-600:#A7B4A0; --ink-400:#7C8B7F;
+    --line:#33463A; --line-strong:#455A4B;
+    --accent:#E7834C; --accent-strong:#F3A06B; --accent-soft:#3A2A1E; --accent-ink:#20140C;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink-900);
+    font-family:"Public Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column;
+  }
+  #app{flex:1; display:flex; flex-direction:column; min-height:100vh;}
+  h1,h2,h3{font-family:"Archivo",system-ui,sans-serif; text-wrap:balance; margin:0;}
+  button{font-family:inherit; cursor:pointer;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; gap:14px; padding:10px 16px;
+    background:var(--surface); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:40;
+  }
+  .brand{display:flex; align-items:center; gap:10px; min-width:0;}
+  .brand-mark{
+    width:34px; height:34px; flex:none; border-radius:9px;
+    background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .brand-text{display:flex; flex-direction:column; line-height:1.15; min-width:0;}
+  .brand-text strong{font-family:"Archivo"; font-weight:700; font-size:15px; letter-spacing:.1px;}
+  .brand-text span{font-size:11.5px; color:var(--ink-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .mode-switch{display:flex; gap:4px; background:var(--surface-2); padding:3px; border-radius:10px; margin-left:auto;}
+  .mode-btn{
+    border:none; background:transparent; color:var(--ink-600); font-weight:600; font-size:12.5px;
+    padding:7px 12px; border-radius:8px; white-space:nowrap;
+  }
+  .mode-btn.active{background:var(--surface); color:var(--ink-900); box-shadow:var(--shadow);}
+  .counter{font-size:11.5px; color:var(--ink-600); white-space:nowrap; display:none;}
+  @media(min-width:720px){ .counter{display:block;} }
+
+  /* ---------- Intro ---------- */
+  .intro-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:28px 16px;}
+  .intro-card{
+    max-width:460px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:28px 26px; box-shadow:var(--shadow);
+  }
+  .intro-card .eyebrow{
+    font-family:"Archivo"; font-weight:700; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:8px;
+  }
+  .intro-card h1{font-size:22px; margin-bottom:10px;}
+  .intro-card p{font-size:14px; line-height:1.6; color:var(--ink-600); margin:0 0 10px;}
+  .intro-card ul{margin:0 0 18px; padding-left:18px; font-size:13.5px; line-height:1.7; color:var(--ink-600);}
+  .btn{
+    border:none; border-radius:10px; padding:11px 18px; font-weight:600; font-size:14px;
+    display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-strong);}
+  .btn-ghost{background:var(--surface-2); color:var(--ink-900);}
+  .btn-ghost:hover{background:var(--line);}
+  .btn-block{width:100%;}
+
+  /* ---------- Map ---------- */
+  .map-shell{flex:1; display:flex; flex-direction:column; min-height:0;}
+  @media(min-width:900px){ .map-shell{flex-direction:row;} }
+  .map-pane{position:relative; background:#DCE3D3; overflow:hidden; flex:1; min-height:280px;}
+  .map-scale{position:relative; width:100%; height:100%; margin:0;}
+  .map-scale svg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .map-hit{position:absolute; inset:0; cursor:crosshair;}
+  .pin{
+    position:absolute; width:26px; height:26px; margin-left:-13px; margin-top:-24px;
+    display:flex; align-items:center; justify-content:center; pointer-events:none;
+  }
+  .pin svg{width:100%; height:100%; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));}
+  .pin.draft{animation:drop .28s ease-out;}
+  @keyframes drop{ from{transform:translateY(-14px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+  .map-hint{
+    position:absolute; left:12px; top:12px; background:color-mix(in srgb, var(--surface) 92%, transparent);
+    border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:12.5px; color:var(--ink-600);
+    max-width:min(320px,70%); box-shadow:var(--shadow);
+  }
+  .map-legend{
+    position:absolute; right:12px; bottom:12px; background:color-mix(in srgb, var(--surface) 94%, transparent);
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:11.5px;
+    box-shadow:var(--shadow); max-width:190px; display:none;
+  }
+  @media(min-width:640px){ .map-legend{display:block;} }
+  .legend-row{display:flex; align-items:center; gap:7px; padding:2px 0; color:var(--ink-600);}
+  .legend-dot{width:9px; height:9px; border-radius:50%; flex:none;}
+
+  /* ---------- Form sheet ---------- */
+  .sheet{
+    background:var(--surface); border-top:1px solid var(--line);
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    max-height:78vh; overflow-y:auto; border-radius:16px 16px 0 0; box-shadow:0 -8px 30px -10px rgba(0,0,0,.3);
+    transform:translateY(102%); transition:transform .22s ease;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .sheet.open{transform:translateY(0);}
+  @media(min-width:900px){
+    .sheet{position:static; transform:none; max-height:none; height:auto; flex:0 0 360px;
+      border-radius:0; border-top:none; border-left:1px solid var(--line); box-shadow:none; overflow-y:auto;}
+  }
+  .sheet-empty{display:none; padding:24px 18px; color:var(--ink-600); font-size:13px; line-height:1.6;}
+  @media(min-width:900px){ .sheet-empty{display:block;} }
+  .sheet-grip{width:36px; height:4px; border-radius:2px; background:var(--line-strong); margin:0 auto 12px;}
+  @media(min-width:900px){ .sheet-grip{display:none;} }
+  .sheet h2{font-size:16px; margin-bottom:2px;}
+  .sheet .sub{font-size:12px; color:var(--ink-600); margin-bottom:16px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-family:"Archivo"; font-weight:600; font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-600); margin-bottom:8px;}
+  .field .req{color:var(--accent);}
+  .text-input, textarea{
+    width:100%; border:1px solid var(--line); border-radius:9px; padding:9px 11px; font-size:14px;
+    font-family:inherit; background:var(--bg); color:var(--ink-900);
+  }
+  textarea{min-height:70px; resize:vertical;}
+  .chip-group{display:flex; flex-wrap:wrap; gap:7px;}
+  .chip{
+    border:1px solid var(--line); background:var(--surface); color:var(--ink-900);
+    border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:500;
+    display:inline-flex; align-items:center; gap:6px; line-height:1.2;
+  }
+  .chip .dot{width:8px; height:8px; border-radius:50%; flex:none;}
+  .chip[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--ink-900); font-weight:600;}
+  .chip.usage[aria-pressed="true"]{color:#fff; border-color:transparent;}
+  details.profil-group{border:1px solid var(--line); border-radius:10px; margin-bottom:8px; overflow:hidden;}
+  details.profil-group summary{
+    padding:9px 12px; font-size:12.5px; font-weight:600; color:var(--ink-900); list-style:none;
+    display:flex; align-items:center; justify-content:space-between; background:var(--surface-2);
+  }
+  details.profil-group summary::-webkit-details-marker{display:none;}
+  details.profil-group summary::after{content:"+"; color:var(--ink-600); font-size:15px;}
+  details.profil-group[open] summary::after{content:"–";}
+  details.profil-group .chip-group{padding:10px 12px;}
+  .sheet-actions{display:flex; gap:10px; margin-top:6px; position:sticky; bottom:-16px; background:var(--surface); padding-top:6px;}
+
+  /* ---------- Toast ---------- */
+  #toast-root{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:8px; pointer-events:none;}
+  .toast{
+    background:var(--ink-900); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:13px; font-weight:600;
+    box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:opacity .2s, transform .2s;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+
+  /* ---------- Chercheur ---------- */
+  .gate-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:28px 16px;}
+  .research-shell{flex:1; display:flex; flex-direction:column; min-height:0;}
+  .filters-bar{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 16px;
+    background:var(--surface); border-bottom:1px solid var(--line);
+  }
+  .filter-pop{position:relative;}
+  .filter-btn{
+    border:1px solid var(--line); background:var(--surface); border-radius:9px; padding:7px 11px;
+    font-size:12.5px; font-weight:600; color:var(--ink-900); display:flex; align-items:center; gap:6px;
+  }
+  .filter-btn .badge{background:var(--accent); color:var(--accent-ink); border-radius:999px; padding:1px 6px; font-size:10.5px;}
+  .filter-menu{
+    position:absolute; top:calc(100% + 6px); left:0; background:var(--surface); border:1px solid var(--line);
+    border-radius:10px; padding:10px; box-shadow:var(--shadow); z-index:30; width:max-content; max-width:260px;
+  }
+  .filter-menu .chip-group{max-width:240px;}
+  .reset-link{font-size:12px; color:var(--ink-600); text-decoration:underline; background:none; border:none; padding:4px;}
+  .view-toggle{display:flex; gap:4px; background:var(--surface-2); padding:3px; border-radius:9px; margin-left:auto;}
+  .view-toggle button{border:none; background:transparent; padding:6px 10px; border-radius:7px; font-size:12px; font-weight:600; color:var(--ink-600);}
+  .view-toggle button.active{background:var(--surface); color:var(--ink-900);}
+  .export-btn{margin-left:6px;}
+
+  .stats-strip{display:flex; gap:18px; padding:12px 16px; overflow-x:auto; background:var(--surface); border-bottom:1px solid var(--line);}
+  .stat-tile{flex:none; min-width:120px;}
+  .stat-tile .n{font-family:"IBM Plex Mono"; font-size:20px; font-weight:500; font-variant-numeric:tabular-nums;}
+  .stat-tile .lab{font-size:11px; color:var(--ink-600);}
+  .bars{flex:1; min-width:260px;}
+  .bar-row{display:grid; grid-template-columns:150px 1fr 34px; align-items:center; gap:8px; padding:3px 0;}
+  .bar-row .lab{font-size:11.5px; color:var(--ink-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .bar-track{height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:4px;}
+  .bar-row .val{font-family:"IBM Plex Mono"; font-size:11.5px; text-align:right; color:var(--ink-900);}
+
+  .research-body{flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden;}
+  @media(min-width:980px){ .research-body{flex-direction:row;} }
+  .research-map{position:relative; background:#DCE3D3; flex:0 0 300px; min-height:0;}
+  @media(min-width:980px){ .research-map{flex:1;} }
+  .research-map .map-scale{width:100%; height:100%;}
+  .dot-pin{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; border:2px solid #fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.4); cursor:pointer;}
+  .list-pane{flex:1; overflow-y:auto; min-height:0; border-top:1px solid var(--line);}
+  @media(min-width:980px){ .list-pane{flex:0 0 380px; border-top:none; border-left:1px solid var(--line);} }
+  .entry-card{padding:13px 16px; border-bottom:1px solid var(--line);}
+  .entry-card:target, .entry-card.highlight{background:var(--accent-soft);}
+  .entry-top{display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:6px;}
+  .entry-lieu{font-family:"Archivo"; font-weight:700; font-size:13.5px;}
+  .entry-date{font-size:10.5px; color:var(--ink-400); font-family:"IBM Plex Mono"; white-space:nowrap;}
+  .tag-row{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px;}
+  .tag{font-size:10.5px; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-600); display:inline-flex; align-items:center; gap:4px;}
+  .tag .dot{width:6px; height:6px; border-radius:50%;}
+  .entry-note{font-size:12.5px; color:var(--ink-600); line-height:1.5; font-style:italic;}
+  .empty-state{padding:40px 20px; text-align:center; color:var(--ink-600); font-size:13px;}
+
+  .table-pane{flex:1; overflow:auto; padding:0 16px 16px; min-height:0;}
+  table.data-table{width:100%; border-collapse:collapse; font-size:12px; min-width:760px;}
+  table.data-table th{position:sticky; top:0; background:var(--surface); text-align:left; font-family:"Archivo"; font-weight:700;
+    font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-600); padding:8px 10px; border-bottom:2px solid var(--line);}
+  table.data-table td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--ink-900);}
+  table.data-table tr:hover td{background:var(--surface-2);}
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap;}
+</style>
+<div id="app"></div>
+<div id="toast-root"></div>
+<script id="cu-data" type="application/json">{"entries":[]}</script>
+<script id="app-script">
+(function(){
+  "use strict";
+
+  var USAGES = [
+    {key:'commerce',      label:'Commerce / boutique',                         color:'#1D5FC7'},
+    {key:'restauration',  label:'Restauration / café',                         color:'#D07C1B'},
+    {key:'habitat',       label:'Habitat / logement',                          color:'#8A3FBE'},
+    {key:'bureaux',       label:'Bureaux / travail',                           color:'#0E8F82'},
+    {key:'equipement',    label:'Équipement public (école, crèche, santé…)',   color:'#B2264A'},
+    {key:'espace_public', label:'Espace public / rue / place',                 color:'#1489AE'},
+    {key:'espace_vert',   label:'Espace vert / parc',                          color:'#3F8F2E'},
+    {key:'loisirs',       label:'Loisirs / culture / sport',                   color:'#C13F8C'},
+    {key:'friche',        label:'Friche / vacant / chantier',                  color:'#9C5A2E'},
+    {key:'autre',         label:'Autre',                                       color:'#6B6B63'}
+  ];
+
+  var PROFIL_GROUPS = [
+    {key:'age', label:"Tranche d'âge", options:[
+      {key:'enfants', label:'Enfants (– 12 ans)'},
+      {key:'ados', label:'Ados (12–17 ans)'},
+      {key:'jeunes_adultes', label:'Jeunes adultes (18–25 ans)'},
+      {key:'adultes', label:'Adultes (26–64 ans)'},
+      {key:'seniors', label:'Seniors (65 ans et +)'}
+    ]},
+    {key:'lien', label:'Lien au quartier', options:[
+      {key:'habitant', label:'Habitant·e'},
+      {key:'travailleur', label:'Travailleur·se'},
+      {key:'etudiant', label:'Élève / étudiant·e'},
+      {key:'chuv', label:'Patient·e / visiteur CHUV'},
+      {key:'passant', label:'Passant·e'},
+      {key:'precarite', label:'Personne en situation de précarité'}
+    ]},
+    {key:'genre', label:'Genre observé', options:[
+      {key:'femmes', label:'Femmes'},
+      {key:'hommes', label:'Hommes'},
+      {key:'mixte', label:'Mixte / non déterminé'}
+    ]}
+  ];
+
+  var MOMENTS = [
+    {key:'matin', label:'Matin'},
+    {key:'journee', label:'Journée'},
+    {key:'soir', label:'Soir / nuit'},
+    {key:'semaine', label:'Semaine'},
+    {key:'weekend', label:'Week-end'}
+  ];
+
+  function usageColor(key){ for(var i=0;i<USAGES.length;i++){ if(USAGES[i].key===key) return USAGES[i].color; } return '#6B6B63'; }
+  function usageLabel(key){ for(var i=0;i<USAGES.length;i++){ if(USAGES[i].key===key) return USAGES[i].label; } return key; }
+  function profilLabel(key){
+    for(var g=0; g<PROFIL_GROUPS.length; g++){ var opts = PROFIL_GROUPS[g].options;
+      for(var i=0;i<opts.length;i++){ if(opts[i].key===key) return opts[i].label; } }
+    return key;
+  }
+  function momentLabel(key){ for(var i=0;i<MOMENTS.length;i++){ if(MOMENTS[i].key===key) return MOMENTS[i].label; } return key; }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function fmtDate(iso){
+    try{ var d = new Date(iso);
+      return d.toLocaleDateString('fr-CH',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' · ' +
+             d.toLocaleTimeString('fr-CH',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){ return ''; }
+  }
+
+  /* ---------------- state ---------------- */
+  var state = { entries: [] };
+  var ui = {
+    mode: 'saisie',                // 'saisie' | 'chercheur'
+    introDismissed: false,
+    draft: null,                   // {x,y,usages:[],age:[],lien:[],genre:[],moment:[]}
+    sheetOpen: false,
+    sessionPins: [],                // entries added THIS visit, shown locally only
+    chercheurUnlocked: false,
+    filters: { usages:[], age:[], lien:[], genre:[], moment:[] },
+    openFilter: null,
+    view: 'map',                   // 'map' | 'liste' | 'table'
+    highlightId: null
+  };
+
+  try{
+    var raw = document.getElementById('cu-data').textContent;
+    var parsed = JSON.parse(raw || '{}');
+    if(parsed && Array.isArray(parsed.entries)) state.entries = parsed.entries;
+  }catch(e){ state.entries = []; }
+
+  try{ ui.chercheurUnlocked = localStorage.getItem('cu_chercheur_ok') === '1'; }catch(e){}
+
+  /* ---------------- SVG base map (schematic reconstruction, Falaises / CHUV, ~1:1000) ---------------- */
+  var MAP_SVG = ''
+    + '<svg viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plan schématique du quartier des Falaises, Lausanne">'
+    + '<defs>'
+    +   '<pattern id="forestPat" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">'
+    +     '<rect width="46" height="46" fill="#B8CFA6"/>'
+    +     '<circle cx="10" cy="12" r="8" fill="#9EBD86"/>'
+    +     '<circle cx="30" cy="6" r="6.5" fill="#A9C794"/>'
+    +     '<circle cx="24" cy="28" r="9" fill="#93B27C"/>'
+    +     '<circle cx="42" cy="34" r="6" fill="#A9C794"/>'
+    +   '</pattern>'
+    + '</defs>'
+    + '<rect x="0" y="0" width="1000" height="700" fill="#E7EADD"/>'
+    + '<path d="M0,0 L400,0 C455,90 470,150 430,260 C395,355 330,410 250,470 C170,530 60,590 0,650 Z" fill="url(#forestPat)"/>'
+    + '<path d="M760,40 C860,10 950,30 1000,10 L1000,220 C920,240 840,220 800,170 C765,128 745,80 760,40 Z" fill="url(#forestPat)" opacity="0.85"/>'
+    + '<rect x="775" y="340" width="205" height="190" rx="10" fill="#CBE0B4"/>'
+    + '<g stroke="#B9D19E" stroke-width="2">'
+    +   '<line x1="775" y1="380" x2="980" y2="380"/><line x1="775" y1="420" x2="980" y2="420"/>'
+    +   '<line x1="775" y1="460" x2="980" y2="460"/><line x1="775" y1="500" x2="980" y2="500"/>'
+    + '</g>'
+    + '<g fill="#CFCABD">'
+    +   '<rect x="330" y="55" width="90" height="42" rx="3" transform="rotate(-38 375 76)"/>'
+    +   '<rect x="290" y="150" width="70" height="120" rx="3"/>'
+    +   '<rect x="150" y="330" width="95" height="45" rx="3" transform="rotate(-30 197 352)"/>'
+    + '</g>'
+    + '<g fill="#DED9CB">'
+    +   '<rect x="330" y="55" width="90" height="6" transform="rotate(-38 375 76)"/>'
+    + '</g>'
+    + '<path d="M655,0 C600,95 552,175 540,270 C528,365 500,430 468,495 C438,558 460,600 452,700" fill="none" stroke="#B7BBAC" stroke-width="0"/>'
+    + '<path d="M655,-10 C600,90 552,175 538,270 C525,365 496,428 463,494 C432,558 450,610 440,710" fill="none" stroke="#9FA69A" stroke-width="52" stroke-linecap="round"/>'
+    + '<path d="M655,-10 C600,90 552,175 538,270 C525,365 496,428 463,494 C432,558 450,610 440,710" fill="none" stroke="#AEB4A6" stroke-width="46" stroke-linecap="round"/>'
+    + '<path d="M655,-10 C600,90 552,175 538,270 C525,365 496,428 463,494 C432,558 450,610 440,710" fill="none" stroke="#E7EADD" stroke-width="2.5" stroke-dasharray="14 12" opacity="0.8"/>'
+    + '<path d="M455,585 C540,560 640,555 760,590" fill="none" stroke="#AEB4A6" stroke-width="40" stroke-linecap="round"/>'
+    + '<g fill="#fff" opacity="0.85">'
+    +   '<rect x="470" y="562" width="10" height="26" transform="rotate(9 475 575)"/>'
+    +   '<rect x="500" y="556" width="10" height="26" transform="rotate(6 505 569)"/>'
+    +   '<rect x="530" y="553" width="10" height="26" transform="rotate(3 535 566)"/>'
+    +   '<rect x="560" y="551" width="10" height="26"/>'
+    + '</g>'
+    + '<g fill="#C9CDBF">'
+    +   '<rect x="375" y="60" width="58" height="86" rx="2"/><rect x="345" y="90" width="50" height="70" rx="2"/>'
+    +   '<rect x="240" y="150" width="50" height="70" rx="2"/><rect x="130" y="290" width="55" height="76" rx="2"/>'
+    + '</g>'
+    + '<g transform="translate(560,150) rotate(-34)">'
+    +   '<rect x="-120" y="-24" width="240" height="48" rx="4" fill="#948C7C"/>'
+    +   '<rect x="-120" y="-24" width="240" height="10" fill="#7C7566"/>'
+    +   '<line x1="-72" y1="-24" x2="-72" y2="24" stroke="#7C7566" stroke-width="2"/>'
+    +   '<line x1="-24" y1="-24" x2="-24" y2="24" stroke="#7C7566" stroke-width="2"/>'
+    +   '<line x1="24" y1="-24" x2="24" y2="24" stroke="#7C7566" stroke-width="2"/>'
+    +   '<line x1="72" y1="-24" x2="72" y2="24" stroke="#7C7566" stroke-width="2"/>'
+    +   '<rect x="-108" y="6" width="30" height="14" fill="#4E6B4A"/><rect x="-58" y="6" width="30" height="14" fill="#4E6B4A"/>'
+    +   '<rect x="16" y="6" width="30" height="14" fill="#576B8C"/><rect x="66" y="6" width="30" height="14" fill="#576B8C"/>'
+    + '</g>'
+    + '<g transform="translate(486,270) rotate(-30)">'
+    +   '<rect x="-108" y="-22" width="216" height="44" rx="4" fill="#9B937F"/>'
+    +   '<rect x="-108" y="-22" width="216" height="9" fill="#837B69"/>'
+    +   '<line x1="-64" y1="-22" x2="-64" y2="22" stroke="#837B69" stroke-width="2"/>'
+    +   '<line x1="-20" y1="-22" x2="-20" y2="22" stroke="#837B69" stroke-width="2"/>'
+    +   '<line x1="24" y1="-22" x2="24" y2="22" stroke="#837B69" stroke-width="2"/>'
+    +   '<rect x="-96" y="4" width="26" height="13" fill="#4E6B4A"/><rect x="-52" y="4" width="26" height="13" fill="#4E6B4A"/>'
+    +   '<rect x="14" y="4" width="26" height="13" fill="#576B8C"/>'
+    + '</g>'
+    + '<g transform="translate(414,388) rotate(-27)">'
+    +   '<rect x="-100" y="-21" width="200" height="42" rx="4" fill="#A39B87"/>'
+    +   '<rect x="-100" y="-21" width="200" height="9" fill="#8B8270"/>'
+    +   '<line x1="-58" y1="-21" x2="-58" y2="21" stroke="#8B8270" stroke-width="2"/>'
+    +   '<line x1="-16" y1="-21" x2="-16" y2="21" stroke="#8B8270" stroke-width="2"/>'
+    +   '<line x1="26" y1="-21" x2="26" y2="21" stroke="#8B8270" stroke-width="2"/>'
+    +   '<rect x="-88" y="3" width="24" height="12" fill="#4E6B4A"/><rect x="-46" y="3" width="24" height="12" fill="#4E6B4A"/>'
+    + '</g>'
+    + '<g transform="translate(346,486) rotate(-23)">'
+    +   '<rect x="-92" y="-20" width="184" height="40" rx="4" fill="#ACA391"/>'
+    +   '<rect x="-92" y="-20" width="184" height="8" fill="#948B78"/>'
+    +   '<line x1="-52" y1="-20" x2="-52" y2="20" stroke="#948B78" stroke-width="2"/>'
+    +   '<line x1="-12" y1="-20" x2="-12" y2="20" stroke="#948B78" stroke-width="2"/>'
+    +   '<line x1="28" y1="-20" x2="28" y2="20" stroke="#948B78" stroke-width="2"/>'
+    + '</g>'
+    + '<g transform="translate(675,610)">'
+    +   '<rect x="-95" y="-42" width="190" height="84" rx="6" fill="#5B6A61"/>'
+    +   '<circle cx="-45" cy="-2" r="11" fill="#8FA79B"/><circle cx="10" cy="-2" r="11" fill="#8FA79B"/><circle cx="55" cy="-2" r="9" fill="#8FA79B"/>'
+    + '</g>'
+    + '<polygon points="438,628 458,640 458,662 438,674 418,662 418,640" fill="#C7CBBD" stroke="#AEB4A6" stroke-width="2"/>'
+    + '<circle cx="438" cy="650" r="7" fill="#8FA79B"/>'
+    + '<g>'
+    +   '<rect x="565" y="675" width="150" height="40" fill="#8C9186"/>'
+    +   '<rect x="730" y="668" width="220" height="48" fill="#7E877A"/>'
+    +   '<circle cx="640" cy="695" r="7" fill="#B7BBAC"/><circle cx="680" cy="695" r="7" fill="#B7BBAC"/>'
+    + '</g>'
+    + '<g transform="translate(815,150)">'
+    +   '<g fill="#C7D9B5" stroke="#AEC190" stroke-width="1.5">'
+    +     '<rect x="-46" y="-6" width="26" height="20"/><rect x="-16" y="-6" width="26" height="20"/><rect x="14" y="-6" width="26" height="20"/>'
+    +     '<rect x="-46" y="18" width="26" height="20"/><rect x="-16" y="18" width="26" height="20"/><rect x="14" y="18" width="26" height="20"/>'
+    +   '</g>'
+    +   '<polygon points="0,-38 -20,-20 20,-20" fill="#B2543A"/>'
+    +   '<rect x="-16" y="-20" width="32" height="18" fill="#DCD3C4"/>'
+    + '</g>'
+    + '<text x="596" y="270" font-family="Public Sans" font-weight="600" font-size="13.5" fill="#4B564C" transform="rotate(-58 596 270)">Chemin des Falaises</text>'
+    + '<text x="330" y="128" font-family="Public Sans" font-weight="700" font-size="13" fill="#3E4A3F">Immeubles Les Falaises</text>'
+    + '<text x="330" y="144" font-family="Public Sans" font-size="10.5" fill="#63705F">(logements en terrasses)</text>'
+    + '<text x="742" y="118" font-family="Public Sans" font-weight="600" font-size="11.5" fill="#4B564C">Jardins familiaux</text>'
+    + '<text x="600" y="640" font-family="Public Sans" font-weight="700" font-size="12.5" fill="#F4F1E8">Vers station m2 · CHUV</text>'
+    + '<text x="60" y="640" font-family="Public Sans" font-size="10.5" fill="#63705F" font-style="italic">Talus boisé</text>'
+    + '<g transform="translate(44,40)" font-family="IBM Plex Mono">'
+    +   '<circle cx="0" cy="0" r="15" fill="#F4F1E8" stroke="#B4BDAB"/>'
+    +   '<path d="M0,-9 L4,3 L0,0 L-4,3 Z" fill="#C1552B"/>'
+    +   '<text x="0" y="24" font-size="9" fill="#63705F" text-anchor="middle">N</text>'
+    + '</g>'
+    + '<g transform="translate(40,660)" font-family="IBM Plex Mono" font-size="9.5" fill="#4B564C">'
+    +   '<line x1="0" y1="0" x2="90" y2="0" stroke="#4B564C" stroke-width="2"/>'
+    +   '<line x1="0" y1="-4" x2="0" y2="4" stroke="#4B564C" stroke-width="2"/>'
+    +   '<line x1="90" y1="-4" x2="90" y2="4" stroke="#4B564C" stroke-width="2"/>'
+    +   '<text x="0" y="-8">≈ 50 m (schéma, non métré)</text>'
+    + '</g>'
+    + '</svg>';
+
+  /* ---------------- pin icon ---------------- */
+  function pinSvg(color){
+    return '<svg viewBox="0 0 26 32" xmlns="http://www.w3.org/2000/svg">'
+      + '<path d="M13 0C6 0 0 5.8 0 13c0 9.3 11 17.6 12.1 18.4a1.5 1.5 0 0 0 1.8 0C15 30.6 26 22.3 26 13 26 5.8 20 0 13 0z" fill="'+color+'"/>'
+      + '<circle cx="13" cy="12.5" r="5" fill="#fff"/>'
+      + '</svg>';
+  }
+
+  /* ---------------- toast ---------------- */
+  function toast(msg){
+    var root = document.getElementById('toast-root');
+    var el = document.createElement('div');
+    el.className = 'toast'; el.textContent = msg;
+    root.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ el.remove(); }, 250); }, 2600);
+  }
+
+  /* ---------------- chips helpers ---------------- */
+  function chipHtml(kind, group, key, label, active, color){
+    var dot = color ? '<span class="dot" style="background:'+color+'"></span>' : '';
+    var style = (kind==='usage' && active) ? ' style="background:'+color+';border-color:'+color+'"' : '';
+    return '<button type="button" class="chip'+(kind==='usage'?' usage':'')+'" aria-pressed="'+(active?'true':'false')+'"'+style+
+      ' data-action="toggle-chip" data-kind="'+kind+'" data-group="'+group+'" data-key="'+key+'">'+dot+esc(label)+'</button>';
+  }
+
+  /* ================= RENDER: SAISIE ================= */
+  function renderTopbar(){
+    var count = state.entries.length;
+    return '<div class="topbar">'
+      + '<div class="brand"><span class="brand-mark">'
+      +   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 20 L9 8 L13 15 L16 10 L21 20 Z" fill="currentColor"/></svg>'
+      + '</span><div class="brand-text"><strong>Carte des usages</strong><span>Quartier des Falaises · Lausanne</span></div></div>'
+      + '<nav class="mode-switch" role="tablist" aria-label="Mode">'
+      +   '<button type="button" class="mode-btn'+(ui.mode==='saisie'?' active':'')+'" data-action="set-mode" data-mode="saisie" role="tab" aria-selected="'+(ui.mode==='saisie')+'">Saisie terrain</button>'
+      +   '<button type="button" class="mode-btn'+(ui.mode==='chercheur'?' active':'')+'" data-action="set-mode" data-mode="chercheur" role="tab" aria-selected="'+(ui.mode==='chercheur')+'">Vue chercheur</button>'
+      + '</nav>'
+      + '<div class="counter mono">'+count+' point'+(count>1?'s':'')+' enregistré'+(count>1?'s':'')+'</div>'
+      + '</div>';
+  }
+
+  function renderIntro(){
+    return '<div class="intro-wrap"><div class="intro-card">'
+      + '<div class="eyebrow">Enquête de terrain</div>'
+      + '<h1>À quoi sert ce lieu, pour qui ?</h1>'
+      + '<p>Cette carte sert à repérer, avec vous, les usages du quartier des Falaises&nbsp;: qui fréquente quel endroit, à quel moment, et pour quoi faire.</p>'
+      + '<ul><li>Touchez un point sur la carte pour signaler un lieu.</li>'
+      +   '<li>Décrivez son usage et qui le fréquente.</li>'
+      +   '<li>Vous pouvez ajouter autant de points que vous voulez.</li></ul>'
+      + '<p style="font-size:12px;">Vos réponses sont ajoutées à celles des autres personnes interrogées ; vous ne voyez pas leurs réponses en répondant, pour ne pas vous influencer.</p>'
+      + '<button type="button" class="btn btn-primary btn-block" data-action="dismiss-intro">Commencer <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>'
+      + '</div></div>';
+  }
+
+  function renderMapSvgAndPins(pins, hitEnabled, extraClass){
+    var pinsHtml = pins.map(function(p){
+      return '<div class="pin'+(extraClass?' '+extraClass:'')+'" style="left:'+p.x+'%; top:'+p.y+'%;">'+pinSvg(p.color)+'</div>';
+    }).join('');
+    return '<div class="map-scale">'
+      + MAP_SVG
+      + pinsHtml
+      + (hitEnabled ? '<div class="map-hit" data-action="map-tap" aria-hidden="true"></div>' : '')
+      + '</div>';
+  }
+
+  function renderSaisieMap(){
+    var pins = ui.sessionPins.map(function(e){ return {x:e.x, y:e.y, color: e.usages[0]?usageColor(e.usages[0]):'#6B6B63'}; });
+    if(ui.draft) pins.push({x:ui.draft.x, y:ui.draft.y, color:'#C1552B'});
+    var legend = USAGES.slice(0,6).map(function(u){
+      return '<div class="legend-row"><span class="legend-dot" style="background:'+u.color+'"></span>'+esc(u.label)+'</div>';
+    }).join('');
+    return '<div class="map-shell">'
+      + '<div class="map-pane">'
+      +   renderMapSvgAndPins(pins, true, 'draft')
+      +   '<div class="map-hint">Touchez la carte pour signaler un lieu à documenter.</div>'
+      +   '<div class="map-legend"><strong style="font-family:Archivo;font-size:11px;">Types d\'usage</strong>'+legend+'</div>'
+      + '</div>'
+      + renderFormSheet()
+      + '</div>';
+  }
+
+  function renderFormSheet(){
+    if(!ui.draft){
+      return '<div class="sheet" aria-hidden="true"><div class="sheet-empty">Touchez un point sur la carte pour commencer à décrire un lieu.</div></div>';
+    }
+    var d = ui.draft;
+    var usageChips = USAGES.map(function(u){
+      return chipHtml('usage','usages',u.key,u.label, d.usages.indexOf(u.key)>=0, u.color);
+    }).join('');
+    var profilGroups = PROFIL_GROUPS.map(function(g){
+      var chips = g.options.map(function(o){ return chipHtml('profil',g.key,o.key,o.label, d[g.key].indexOf(o.key)>=0); }).join('');
+      var count = d[g.key].length;
+      return '<details class="profil-group"><summary>'+esc(g.label)+(count?' · '+count:'')+'</summary><div class="chip-group">'+chips+'</div></details>';
+    }).join('');
+    var momentChips = MOMENTS.map(function(m){ return chipHtml('profil','moment',m.key,m.label, d.moment.indexOf(m.key)>=0); }).join('');
+
+    return '<div class="sheet open" role="dialog" aria-label="Détails du point">'
+      + '<div class="sheet-grip"></div>'
+      + '<h2>Ce lieu</h2><div class="sub">Point ajouté · position ('+Math.round(d.x)+', '+Math.round(d.y)+')</div>'
+      + '<div class="field"><label for="cu-lieu">Nom / repère (optionnel)</label>'
+      +   '<input id="cu-lieu" class="text-input" type="text" placeholder="Ex. banc devant l\'entrée, boulangerie…" value="'+esc(d.lieu)+'"></div>'
+      + '<div class="field"><label>Usage du lieu <span class="req">*</span></label><div class="chip-group">'+usageChips+'</div></div>'
+      + '<div class="field"><label>Qui fréquente ce lieu ? (optionnel)</label>'+profilGroups+'</div>'
+      + '<div class="field"><label>Moment observé (optionnel)</label><div class="chip-group">'+momentChips+'</div></div>'
+      + '<div class="field"><label for="cu-note">Note / citation (optionnel)</label>'
+      +   '<textarea id="cu-note" placeholder="Ce que la personne vous a dit, une observation…">'+esc(d.note)+'</textarea></div>'
+      + '<div class="sheet-actions">'
+      +   '<button type="button" class="btn btn-ghost" data-action="cancel-draft" style="flex:1;">Annuler</button>'
+      +   '<button type="button" class="btn btn-primary" data-action="submit-entry" style="flex:2;">Enregistrer ce point</button>'
+      + '</div></div>';
+  }
+
+  /* ================= RENDER: CHERCHEUR ================= */
+  function renderGate(){
+    return '<div class="gate-wrap"><div class="intro-card">'
+      + '<div class="eyebrow">Vue chercheur</div>'
+      + '<h1>Données de l\'enquête</h1>'
+      + '<p>Cette vue affiche l\'ensemble des points déjà collectés, agrégés et filtrables par profil. Elle est réservée à l\'équipe d\'enquête — ne la montrez pas aux personnes interrogées avant qu\'elles aient répondu.</p>'
+      + '<button type="button" class="btn btn-primary btn-block" data-action="unlock-chercheur">Afficher les données ('+state.entries.length+')</button>'
+      + '</div></div>';
+  }
+
+  function matchesFilters(e){
+    var f = ui.filters;
+    function any(sel, val){ return sel.length===0 || val.some(function(v){ return sel.indexOf(v)>=0; }); }
+    return any(f.usages, e.usages) && any(f.age, e.age) && any(f.lien, e.lien) && any(f.genre, e.genre) && any(f.moment, e.moment);
+  }
+
+  function renderFilterPop(group, label, options){
+    var active = ui.filters[group] || [];
+    var open = ui.openFilter === group;
+    var chips = options.map(function(o){
+      var lbl = o.label, key = o.key, color = o.color;
+      return chipHtml(color?'usage':'profil', group, key, lbl, active.indexOf(key)>=0, color);
+    }).join('');
+    return '<div class="filter-pop">'
+      + '<button type="button" class="filter-btn" data-action="toggle-filter-pop" data-group="'+group+'" aria-expanded="'+open+'">'+esc(label)
+      +   (active.length ? '<span class="badge">'+active.length+'</span>' : '')
+      +   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>'
+      + (open ? '<div class="filter-menu"><div class="chip-group">'+chips+'</div></div>' : '')
+      + '</div>';
+  }
+
+  function renderStats(filtered){
+    var total = state.entries.length, n = filtered.length;
+    var counts = {};
+    USAGES.forEach(function(u){ counts[u.key]=0; });
+    filtered.forEach(function(e){ e.usages.forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
+    var max = Math.max(1, Math.max.apply(null, USAGES.map(function(u){ return counts[u.key]; })));
+    var bars = USAGES.map(function(u){
+      var v = counts[u.key], pct = Math.round((v/max)*100);
+      return '<div class="bar-row"><span class="lab">'+esc(u.label.split(' / ')[0])+'</span>'
+        + '<span class="bar-track"><span class="bar-fill" style="width:'+pct+'%; background:'+u.color+'"></span></span>'
+        + '<span class="val mono">'+v+'</span></div>';
+    }).join('');
+    return '<div class="stats-strip">'
+      + '<div class="stat-tile"><div class="n mono">'+n+' / '+total+'</div><div class="lab">points affichés / total</div></div>'
+      + '<div class="bars">'+bars+'</div>'
+      + '</div>';
+  }
+
+  function renderEntryTags(e){
+    var out = e.usages.map(function(k){ return '<span class="tag"><span class="dot" style="background:'+usageColor(k)+'"></span>'+esc(usageLabel(k).split(' / ')[0])+'</span>'; });
+    ['age','lien','genre'].forEach(function(g){ e[g].forEach(function(k){ out.push('<span class="tag">'+esc(profilLabel(k))+'</span>'); }); });
+    e.moment.forEach(function(k){ out.push('<span class="tag">'+esc(momentLabel(k))+'</span>'); });
+    return out.join('');
+  }
+
+  function renderEntryCard(e){
+    return '<div class="entry-card" id="entry-'+e.id+'">'
+      + '<div class="entry-top"><span class="entry-lieu">'+esc(e.lieu || 'Point sans nom')+'</span><span class="entry-date mono">'+fmtDate(e.createdAt)+'</span></div>'
+      + '<div class="tag-row">'+renderEntryTags(e)+'</div>'
+      + (e.note ? '<div class="entry-note">« '+esc(e.note)+' »</div>' : '')
+      + '</div>';
+  }
+
+  function renderResearchMap(filtered){
+    var pins = filtered.map(function(e){ return {x:e.x, y:e.y, color: e.usages[0]?usageColor(e.usages[0]):'#6B6B63', id:e.id}; });
+    var dots = pins.map(function(p){
+      return '<div class="dot-pin" style="left:'+p.x+'%; top:'+p.y+'%; background:'+p.color+';" data-action="focus-entry" data-id="'+p.id+'" title="Voir le détail"></div>';
+    }).join('');
+    return '<div class="research-map"><div class="map-scale">'+MAP_SVG+dots+'</div></div>';
+  }
+
+  function renderResearchBody(){
+    var filtered = state.entries.filter(matchesFilters).sort(function(a,b){ return b.createdAt.localeCompare(a.createdAt); });
+    var listHtml = filtered.length
+      ? filtered.map(renderEntryCard).join('')
+      : '<div class="empty-state">Aucun point ne correspond à ces filtres.<br>'+(state.entries.length===0?'Aucune donnée collectée pour l\'instant.':'')+'</div>';
+
+    var tableHtml = '';
+    if(ui.view === 'table'){
+      var rows = filtered.map(function(e){
+        return '<tr><td>'+esc(e.lieu||'—')+'</td><td>'+e.usages.map(usageLabel).join(', ')+'</td>'
+          + '<td>'+e.age.map(profilLabel).join(', ')+'</td><td>'+e.lien.map(profilLabel).join(', ')+'</td>'
+          + '<td>'+e.genre.map(profilLabel).join(', ')+'</td><td>'+e.moment.map(momentLabel).join(', ')+'</td>'
+          + '<td>'+esc(e.note||'')+'</td><td class="mono">'+fmtDate(e.createdAt)+'</td></tr>';
+      }).join('');
+      tableHtml = '<div class="table-pane"><table class="data-table"><thead><tr>'
+        + '<th>Lieu</th><th>Usage(s)</th><th>Âge</th><th>Lien au quartier</th><th>Genre</th><th>Moment</th><th>Note</th><th>Date</th>'
+        + '</tr></thead><tbody>'+(rows||'<tr><td colspan="8" class="empty-state">Aucune donnée.</td></tr>')+'</tbody></table></div>';
+    }
+
+    return '<div class="research-shell">'
+      + '<div class="filters-bar">'
+      +   renderFilterPop('usages','Usage', USAGES)
+      +   renderFilterPop('age','Âge', PROFIL_GROUPS[0].options)
+      +   renderFilterPop('lien','Lien au quartier', PROFIL_GROUPS[1].options)
+      +   renderFilterPop('genre','Genre', PROFIL_GROUPS[2].options)
+      +   renderFilterPop('moment','Moment', MOMENTS)
+      +   '<button type="button" class="reset-link" data-action="reset-filters">Réinitialiser</button>'
+      +   '<div class="view-toggle">'
+      +     '<button type="button" class="'+(ui.view==='map'?'active':'')+'" data-action="set-view" data-view="map">Carte</button>'
+      +     '<button type="button" class="'+(ui.view==='table'?'active':'')+'" data-action="set-view" data-view="table">Tableau</button>'
+      +   '</div>'
+      +   '<button type="button" class="btn btn-ghost export-btn" data-action="export-csv">Exporter CSV</button>'
+      + '</div>'
+      + renderStats(filtered)
+      + (ui.view === 'table'
+          ? tableHtml
+          : '<div class="research-body">'+renderResearchMap(filtered)+'<div class="list-pane">'+listHtml+'</div></div>')
+      + '</div>';
+  }
+
+  /* ================= ROOT RENDER ================= */
+  function render(){
+    var root = document.getElementById('app');
+    var main;
+    if(ui.mode === 'saisie'){
+      main = !ui.introDismissed ? renderIntro() : renderSaisieMap();
+    } else {
+      main = ui.chercheurUnlocked ? renderResearchBody() : renderGate();
+    }
+    root.innerHTML = renderTopbar() + main;
+  }
+
+  /* ================= ACTIONS ================= */
+  function newDraft(x,y){
+    var d = {x:x, y:y, lieu:'', usages:[], age:[], lien:[], genre:[], moment:[], note:''};
+    return d;
+  }
+
+  function onMapTap(evt){
+    var rect = evt.currentTarget.getBoundingClientRect();
+    var cx = (evt.touches && evt.touches[0]) ? evt.touches[0].clientX : evt.clientX;
+    var cy = (evt.touches && evt.touches[0]) ? evt.touches[0].clientY : evt.clientY;
+    var x = Math.max(1, Math.min(99, ((cx - rect.left) / rect.width) * 100));
+    var y = Math.max(1, Math.min(99, ((cy - rect.top) / rect.height) * 100));
+    ui.draft = newDraft(x,y);
+    render();
+  }
+
+  function readCurrentDraftFields(){
+    if(!ui.draft) return;
+    var lieuEl = document.getElementById('cu-lieu');
+    var noteEl = document.getElementById('cu-note');
+    if(lieuEl) ui.draft.lieu = lieuEl.value;
+    if(noteEl) ui.draft.note = noteEl.value;
+  }
+
+  function submitEntry(){
+    readCurrentDraftFields();
+    var d = ui.draft;
+    if(!d || d.usages.length===0){
+      toast('Choisissez au moins un usage.');
+      return;
+    }
+    var entry = {
+      id: uid(), x:d.x, y:d.y, lieu:d.lieu.trim(), usages:d.usages.slice(),
+      age:d.age.slice(), lien:d.lien.slice(), genre:d.genre.slice(), moment:d.moment.slice(),
+      note:d.note.trim(), createdAt: new Date().toISOString()
+    };
+    stashPending(entry);
+    var newEntries = state.entries.concat([entry]);
+    publishEntries(newEntries, function ok(){
+      state.entries = newEntries;
+      ui.sessionPins.push(entry);
+      ui.draft = null;
+      clearPending(entry.id);
+      toast('Point enregistré ✓');
+      render();
+    }, function fail(){
+      ui.draft = null;
+      toast('Enregistrement en attente de synchronisation…');
+      render();
+    });
+  }
+
+  function cancelDraft(){ ui.draft = null; render(); }
+
+  function toggleChip(kind, group, key){
+    var target = ui.mode==='saisie' ? ui.draft : ui.filters;
+    if(!target) return;
+    var arr = target[group];
+    var i = arr.indexOf(key);
+    if(i>=0) arr.splice(i,1); else arr.push(key);
+    render();
+  }
+
+  /* ---- persistence: publish via artifact capability, with session-storage stash for conflict-safe retry ---- */
+  function stashPending(entry){
+    try{
+      var arr = JSON.parse(sessionStorage.getItem('cu_pending')||'[]');
+      arr.push(entry);
+      sessionStorage.setItem('cu_pending', JSON.stringify(arr));
+    }catch(e){}
+  }
+  function clearPending(id){
+    try{
+      var arr = JSON.parse(sessionStorage.getItem('cu_pending')||'[]').filter(function(e){ return e.id!==id; });
+      sessionStorage.setItem('cu_pending', JSON.stringify(arr));
+    }catch(e){}
+  }
+  function readPending(){
+    try{ return JSON.parse(sessionStorage.getItem('cu_pending')||'[]'); }catch(e){ return []; }
+  }
+
+  function buildFullDocument(entries){
+    var headHTML = document.head.innerHTML;
+    var scriptHTML = document.getElementById('app-script').outerHTML;
+    var dataHTML = '<script id="cu-data" type="application/json">'
+      + JSON.stringify({entries:entries}).replace(/</g,'\\u003c') + '<' + '/script>';
+    return '<!doctype html>\n<html lang="fr">\n<head>' + headHTML + '</head>\n<body>'
+      + '<div id="app"></div><div id="toast-root"></div>' + dataHTML + scriptHTML
+      + '</body>\n</html>';
+  }
+
+  var publishing = false;
+  function publishEntries(entries, onSuccess, onFail){
+    if(publishing){ onFail && onFail(); return; }
+    publishing = true;
+    if(!window.claude || !window.claude.use){ publishing=false; onFail && onFail(); return; }
+    window.claude.use('artifact').then(function(artifact){
+      if(!artifact){ publishing=false; onFail && onFail(); return; }
+      var html = buildFullDocument(entries);
+      artifact.publish(html).then(function(){
+        publishing = false;
+        onSuccess && onSuccess();
+      }).catch(function(err){
+        publishing = false;
+        onFail && onFail(err);
+      });
+    }).catch(function(){ publishing=false; onFail && onFail(); });
+  }
+
+  function reconcilePendingOnLoad(){
+    var pending = readPending();
+    if(!pending.length) return;
+    var missing = pending.filter(function(p){ return !state.entries.some(function(e){ return e.id===p.id; }); });
+    if(!missing.length){ try{ sessionStorage.removeItem('cu_pending'); }catch(e){} return; }
+    var newEntries = state.entries.concat(missing);
+    publishEntries(newEntries, function(){
+      state.entries = newEntries;
+      missing.forEach(function(m){ clearPending(m.id); });
+      render();
+    }, function(){ /* stays pending; user can keep working, will retry next load */ });
+  }
+
+  /* ---- chercheur ---- */
+  function unlockChercheur(){
+    ui.chercheurUnlocked = true;
+    try{ localStorage.setItem('cu_chercheur_ok','1'); }catch(e){}
+    render();
+  }
+  function resetFilters(){ ui.filters = {usages:[],age:[],lien:[],genre:[],moment:[]}; render(); }
+  function setView(v){ ui.view = v; render(); }
+
+  function exportCSV(){
+    var cols = ['lieu','usages','age','lien','genre','moment','note','date'];
+    var lines = [cols.join(';')];
+    var filtered = state.entries.filter(matchesFilters);
+    filtered.forEach(function(e){
+      var row = [
+        e.lieu, e.usages.map(usageLabel).join(' / '), e.age.map(profilLabel).join(' / '),
+        e.lien.map(profilLabel).join(' / '), e.genre.map(profilLabel).join(' / '),
+        e.moment.map(momentLabel).join(' / '), e.note, fmtDate(e.createdAt)
+      ].map(function(v){ return '"'+String(v||'').replace(/"/g,'""')+'"'; });
+      lines.push(row.join(';'));
+    });
+    var csv = '﻿' + lines.join('\r\n');
+    if(!window.claude || !window.claude.use){ toast('Export indisponible dans cette vue.'); return; }
+    window.claude.use('downloads').then(function(dl){
+      if(!dl){ toast('Export indisponible dans cette vue.'); return; }
+      dl.save({filename:'carte-usages-falaises.csv', data:csv}).catch(function(err){
+        if(err && (err.code==='extension_not_enabled' || err.code==='rejected_extension')){
+          dl.save({filename:'carte-usages-falaises.txt', data:csv}).then(function(){
+            toast('Exporté en .txt — renommez en .csv pour Excel');
+          }).catch(function(){ toast('Export refusé.'); });
+        } else if(err && err.code==='declined'){
+          /* user cancelled, no toast needed */
+        } else {
+          toast('Export impossible ici.');
+        }
+      });
+    });
+  }
+
+  /* ================= EVENT DELEGATION ================= */
+  document.addEventListener('DOMContentLoaded', function(){
+    reconcilePendingOnLoad();
+    render();
+
+    document.getElementById('app').addEventListener('click', function(evt){
+      var el = evt.target.closest('[data-action]');
+      if(!el) return;
+      var action = el.getAttribute('data-action');
+      if(action==='map-tap'){ onMapTap(evt); return; }
+      if(action==='dismiss-intro'){ ui.introDismissed = true; render(); return; }
+      if(action==='set-mode'){ ui.mode = el.getAttribute('data-mode'); ui.openFilter=null; render(); return; }
+      if(action==='submit-entry'){ submitEntry(); return; }
+      if(action==='cancel-draft'){ cancelDraft(); return; }
+      if(action==='toggle-chip'){ toggleChip(el.getAttribute('data-kind'), el.getAttribute('data-group'), el.getAttribute('data-key')); return; }
+      if(action==='unlock-chercheur'){ unlockChercheur(); return; }
+      if(action==='toggle-filter-pop'){
+        var g = el.getAttribute('data-group');
+        ui.openFilter = (ui.openFilter===g) ? null : g;
+        render(); return;
+      }
+      if(action==='reset-filters'){ resetFilters(); return; }
+      if(action==='set-view'){ setView(el.getAttribute('data-view')); return; }
+      if(action==='export-csv'){ exportCSV(); return; }
+      if(action==='focus-entry'){
+        var id = el.getAttribute('data-id');
+        var card = document.getElementById('entry-'+id);
+        if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); card.classList.add('highlight');
+          setTimeout(function(){ card.classList.remove('highlight'); }, 1600); }
+        return;
+      }
+    });
+
+    document.addEventListener('click', function(evt){
+      if(ui.openFilter && !evt.target.closest('.filter-pop')){ ui.openFilter=null; render(); }
+    });
+  });
+})();
+</script>
