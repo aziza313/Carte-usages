@@ -133,6 +133,7 @@ textarea#note-point{
 }
 .tiroir-actions{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--ligne)}
 
+@keyframes pouls-anneau{0%,100%{opacity:.9;transform:scale(1)}50%{opacity:.25;transform:scale(1.22)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -447,23 +448,41 @@ function rafraichirChips() {
     b.style.borderColor = actif ? cat.couleur : '';
   });
   boutonEnregistrerPoint.disabled = brouillonCategories.length === 0;
+  if (marqueurBrouillon) mettreAJourBrouillon();
 }
 
-function icônePoint(categories) {
-  const cat = categorieParCle(categories[0]) || CATEGORIES[CATEGORIES.length - 1];
-  return L.divIcon({
-    className: '', iconSize: [34, 34], iconAnchor: [17, 17],
-    html: '<div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);' +
-      'background:' + cat.couleur + ';border:2.5px solid #fff;box-shadow:0 2px 6px rgba(43,33,24,.4);' +
-      'display:flex;align-items:center;justify-content:center;">' +
-      '<span style="transform:rotate(45deg);font-size:16px;">' + cat.emoji + '</span></div>'
-  });
+function balisagePin(cat, enEdition) {
+  const halo = enEdition
+    ? '<div style="position:absolute;inset:-7px;border-radius:50%;border:3px dashed rgba(43,33,24,.55);' +
+      'animation:pouls-anneau 1.1s ease-in-out infinite;"></div>'
+    : '';
+  const fond = cat ? cat.couleur : '#B9B2A6';
+  const emoji = cat ? cat.emoji : '···';
+  return '<div style="position:relative;width:34px;height:34px;">' + halo +
+    '<div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);' +
+    'background:' + fond + ';border:2.5px solid #fff;box-shadow:0 2px 6px rgba(43,33,24,.4);' +
+    'display:flex;align-items:center;justify-content:center;">' +
+    '<span style="transform:rotate(45deg);font-size:' + (cat ? '16px' : '11px') + ';color:#fff;">' + emoji + '</span></div></div>';
+}
+function icônePoint(categories, enEdition) {
+  const cat = categories.length ? categorieParCle(categories[0]) : null;
+  return L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 30], html: balisagePin(cat, !!enEdition) });
+}
+
+let marqueurBrouillon = null;
+function mettreAJourBrouillon(latlng) {
+  if (marqueurBrouillon) { marqueurBrouillon.setIcon(icônePoint(brouillonCategories, true)); return; }
+  marqueurBrouillon = L.marker(latlng, { icon: icônePoint(brouillonCategories, true), interactive: false, zIndexOffset: 1000 }).addTo(carte);
+}
+function retirerBrouillon() {
+  if (marqueurBrouillon) { marqueurBrouillon.remove(); marqueurBrouillon = null; }
 }
 
 function dessinerPoints() {
   coucheMarqueurs.clearLayers();
   points.forEach(function (p) {
-    const m = L.marker([p.lat, p.lng], { icon: icônePoint(p.categories) });
+    if (pointEnEdition && p === pointEnEdition) return; // affiché via le marqueur brouillon pendant l'édition
+    const m = L.marker([p.lat, p.lng], { icon: icônePoint(p.categories, false) });
     m.on('click', function () { ouvrirTiroirPoint(p); });
     coucheMarqueurs.addLayer(m);
   });
@@ -503,6 +522,7 @@ function ouvrirTiroirNouveauPoint(latlng) {
   notePointEl.value = '';
   tiroirTitre.textContent = 'Ce lieu';
   boutonSupprimerPoint.hidden = true;
+  mettreAJourBrouillon(latlng);
   rafraichirChips();
   groupePoints.hidden = true;
   tiroirPoint.hidden = false;
@@ -515,7 +535,9 @@ function ouvrirTiroirPoint(p) {
   notePointEl.value = p.note || '';
   tiroirTitre.textContent = 'Modifier ce lieu';
   boutonSupprimerPoint.hidden = false;
+  mettreAJourBrouillon([p.lat, p.lng]);
   rafraichirChips();
+  dessinerPoints();
   groupePoints.hidden = true;
   tiroirPoint.hidden = false;
   tiroirPoint.scrollTop = 0;
@@ -523,8 +545,10 @@ function ouvrirTiroirPoint(p) {
 }
 function fermerTiroir() {
   pointEnEdition = null;
+  retirerBrouillon();
   tiroirPoint.hidden = true;
   groupePoints.hidden = false;
+  dessinerPoints();
   carte.invalidateSize();
 }
 document.getElementById('btn-fermer-tiroir').addEventListener('click', fermerTiroir);
