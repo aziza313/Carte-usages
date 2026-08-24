@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>Carte des usages · Lausanne</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --creme:#FFF8EE;
+  --papier:#FFFFFF;
+  --encre:#2B2118;
+  --encre-doux:#8A7A68;
+  --corail:#FF5A46;
+  --corail-sombre:#E0402D;
+  --soleil:#FFC93C;
+  --ciel:#3FA9E0;
+  --feuille:#4CAF6D;
+  --ligne:#F0E4D3;
+  --ombre:0 6px 20px -6px rgba(43,33,24,.25);
+  --rayon:18px;
+  --titre:"Fredoka",system-ui,sans-serif;
+  --texte:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--creme);color:var(--encre);
+  font-family:var(--texte);font-size:15px;line-height:1.45;
+  display:flex;flex-direction:column;-webkit-text-size-adjust:100%;
+}
+
+/* ---------- bandeau ---------- */
+.bandeau{
+  background:var(--corail);color:#fff;flex:0 0 auto;
+  display:flex;align-items:center;gap:12px;padding:12px 18px;
+  box-shadow:var(--ombre);position:relative;z-index:20;
+}
+.bandeau .bulle{
+  width:42px;height:42px;border-radius:50%;background:#fff;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);
+}
+.bandeau h1{font-family:var(--titre);font-weight:700;font-size:19px;letter-spacing:-.01em;margin:0}
+.bandeau h1 span{display:block;font-family:var(--texte);font-size:12px;font-weight:700;letter-spacing:.03em;opacity:.9}
+.bandeau .pousse{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pastille-etape{
+  font-family:var(--texte);font-weight:800;font-size:12px;background:rgba(255,255,255,.22);
+  color:#fff;padding:6px 12px;border-radius:999px;white-space:nowrap;
+}
+
+/* ---------- carte ---------- */
+main{flex:1 1 auto;position:relative;min-height:0}
+#carte{position:absolute;inset:0;background:#DDEBF2}
+
+.leaflet-container{font-family:var(--texte)}
+.leaflet-control-zoom a{
+  border-radius:12px !important;color:var(--corail) !important;font-weight:800 !important;
+}
+.leaflet-control-layers{
+  border-radius:var(--rayon) !important;border:none !important;box-shadow:var(--ombre) !important;
+  font-family:var(--texte);padding:8px 10px !important;
+}
+.leaflet-bar{border:none !important;box-shadow:var(--ombre) !important;border-radius:12px !important;overflow:hidden}
+
+.bouton-flottant{
+  position:absolute;z-index:15;background:var(--papier);color:var(--encre);
+  border:none;border-radius:999px;padding:11px 18px;font-family:var(--texte);font-weight:800;font-size:13.5px;
+  box-shadow:var(--ombre);cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+}
+.bouton-flottant:hover{background:#FFF3E4}
+.bouton-flottant.principal{background:var(--corail);color:#fff}
+.bouton-flottant.principal:hover{background:var(--corail-sombre)}
+
+#btn-recentrer{left:16px;bottom:16px}
+
+.info-coin{
+  position:absolute;right:16px;top:16px;z-index:15;background:var(--papier);
+  border-radius:var(--rayon);box-shadow:var(--ombre);padding:14px 16px;max-width:250px;
+  font-size:13px;color:var(--encre-doux);
+}
+.info-coin strong{display:block;color:var(--encre);font-family:var(--titre);font-weight:600;font-size:15px;margin-bottom:4px}
+@media (max-width:640px){ .info-coin{max-width:min(78vw,260px)} }
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="bandeau">
+  <span class="bulle">🗺️</span>
+  <h1>Carte des usages<span>Ville de Lausanne</span></h1>
+  <div class="pousse">
+    <span class="pastille-etape">Étape 1 · Choisis ton coin de la ville</span>
+  </div>
+</header>
+
+<main>
+  <div id="carte" role="application" aria-label="Carte de Lausanne. Déplace-toi et zoome pour choisir la zone qui t'intéresse."></div>
+  <button type="button" class="bouton-flottant principal" id="btn-recentrer">↺ Recentrer sur Lausanne</button>
+  <div class="info-coin">
+    <strong>Zoome sur ton coin</strong>
+    Balade-toi sur la carte et rapproche-toi de l'endroit dont tu veux parler. La suite (dessiner ton quartier, ajouter des lieux) arrive à la prochaine étape.
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const LAUSANNE_CENTRE = [46.5197, 6.6323];
+const LAUSANNE_ZOOM_DEPART = 14;
+
+const FONDS = [
+  { id:'couleur', libelle:'Carte colorée', natif:19,
+    url:'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
+    credit:'© swisstopo' },
+  { id:'ortho', libelle:'Photo aérienne', natif:20,
+    url:'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',
+    credit:'© swisstopo' },
+  { id:'osm', libelle:'OpenStreetMap', natif:19,
+    url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    credit:'© contributrices et contributeurs OpenStreetMap' }
+];
+
+const carte = L.map('carte', {
+  center: LAUSANNE_CENTRE, zoom: LAUSANNE_ZOOM_DEPART,
+  minZoom: 11, maxZoom: 20, zoomControl: true
+});
+
+L.control.scale({ imperial:false, position:'bottomright', maxWidth:120 }).addTo(carte);
+
+const couches = {};
+FONDS.forEach(function (f) {
+  couches[f.libelle] = L.tileLayer(f.url, { maxZoom:20, maxNativeZoom:f.natif, attribution:f.credit });
+});
+couches[FONDS[0].libelle].addTo(carte);
+L.control.layers(couches, null, { position:'topright', collapsed:true }).addTo(carte);
+
+document.getElementById('btn-recentrer').addEventListener('click', function () {
+  carte.flyTo(LAUSANNE_CENTRE, LAUSANNE_ZOOM_DEPART, { duration:0.6 });
+});
+
+setTimeout(function () { carte.invalidateSize(); }, 150);
+window.addEventListener('resize', function () { carte.invalidateSize(); });
+</script>
+</body>
+</html>
