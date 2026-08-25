@@ -83,7 +83,9 @@ main{flex:1 1 auto;position:relative;min-height:0}
   box-shadow:0 -6px 16px -10px rgba(43,33,24,.3);position:relative;z-index:20;
 }
 .groupe-bas{display:flex;align-items:center;gap:10px;width:100%}
-.groupe-bas[hidden]{display:none}
+.groupe-bas.colonne{flex-direction:column;align-items:stretch;gap:8px}
+.rangee-boutons{display:flex;gap:10px;width:100%}
+.rangee-boutons button{flex:1;justify-content:center}
 .surface-info{font-family:var(--titre);font-weight:600;font-size:14.5px;color:var(--encre);flex:1;min-width:0}
 .surface-info b{color:var(--corail)}
 
@@ -134,6 +136,24 @@ textarea#note-point{
 .tiroir-actions{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--ligne)}
 
 @keyframes pouls-anneau{0%,100%{opacity:.9;transform:scale(1)}50%{opacity:.25;transform:scale(1.22)}}
+
+/* ---------- écran de profil ---------- */
+.ecran-profil{position:absolute;inset:0;background:var(--creme);overflow-y:auto;z-index:5}
+.ecran-profil[hidden]{display:none}
+.carte-profil{max-width:480px;margin:0 auto;padding:20px 20px 48px}
+.carte-profil .lien-fermer{margin-bottom:10px;padding:6px 0}
+.oeil-profil{
+  font-family:var(--texte);font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--corail);margin:0 0 6px;
+}
+.carte-profil h2{font-family:var(--titre);font-weight:700;font-size:24px;margin:0 0 8px;letter-spacing:-.01em}
+.sous-titre-profil{font-size:13.5px;color:var(--encre-doux);margin:0 0 22px;line-height:1.55}
+.carte-profil label.etiquette-champ, .carte-profil p.etiquette-champ{margin-top:18px}
+.champ-texte{
+  width:100%;border:2px solid var(--ligne);border-radius:12px;padding:11px 14px;font-family:var(--texte);
+  font-size:15px;color:var(--encre);background:var(--papier);
+}
+#btn-envoyer{width:100%;justify-content:center;margin-top:28px;padding:14px 18px;font-size:14.5px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -154,6 +174,38 @@ textarea#note-point{
 
 <main>
   <div id="carte" role="application" aria-label="Carte de Lausanne. Déplace-toi et zoome pour choisir la zone qui t'intéresse, puis dessine les limites de ton quartier."></div>
+
+  <section class="ecran-profil" id="ecran-profil" hidden>
+    <div class="carte-profil">
+      <button type="button" class="lien-fermer" id="btn-retour-carte">← Retour à la carte</button>
+      <p class="oeil-profil">Dernière étape</p>
+      <h2>Et toi, qui es-tu ?</h2>
+      <p class="sous-titre-profil">Ces informations servent à croiser les usages avec qui fréquente le quartier. Elles restent anonymes.</p>
+
+      <label class="etiquette-champ" for="champ-age">Ton âge</label>
+      <input type="number" id="champ-age" inputmode="numeric" min="0" max="120" placeholder="Ex. 34" class="champ-texte">
+
+      <p class="etiquette-champ">Ton lien avec ce quartier (un ou plusieurs)</p>
+      <div class="grille-chips" id="grille-lien"></div>
+
+      <div id="bloc-duree" hidden>
+        <label class="etiquette-champ" for="champ-duree">Depuis combien de temps y habites-tu ?</label>
+        <select id="champ-duree" class="champ-texte">
+          <option value="">—</option>
+          <option value="moins-1-an">Moins d'un an</option>
+          <option value="1-5-ans">1 à 5 ans</option>
+          <option value="5-10-ans">5 à 10 ans</option>
+          <option value="plus-10-ans">Plus de 10 ans</option>
+          <option value="toute-vie">Toute ma vie</option>
+        </select>
+      </div>
+
+      <p class="etiquette-champ">Ton genre</p>
+      <div class="grille-chips" id="grille-genre"></div>
+
+      <button type="button" class="bouton-flottant principal large" id="btn-envoyer">✓ Envoyer mes réponses</button>
+    </div>
+  </section>
 </main>
 
 <section class="tiroir" id="tiroir-point" hidden>
@@ -183,9 +235,12 @@ textarea#note-point{
     <button type="button" class="bouton-flottant" id="btn-recommencer">↺ Refaire</button>
     <button type="button" class="bouton-flottant principal" id="btn-valider-quartier">✓ Valider</button>
   </div>
-  <div class="groupe-bas" id="groupe-points" hidden>
+  <div class="groupe-bas colonne" id="groupe-points" hidden>
     <div class="surface-info" id="texte-compteur">Aucun lieu ajouté pour l'instant</div>
-    <button type="button" class="bouton-flottant principal" id="btn-ajouter-point">➕ Ajouter un lieu</button>
+    <div class="rangee-boutons">
+      <button type="button" class="bouton-flottant" id="btn-ajouter-point">➕ Ajouter un lieu</button>
+      <button type="button" class="bouton-flottant principal" id="btn-continuer-profil" disabled>Continuer →</button>
+    </div>
   </div>
 </footer>
 
@@ -488,6 +543,7 @@ function dessinerPoints() {
   });
   const n = points.length;
   texteCompteur.textContent = n === 0 ? 'Aucun lieu ajouté pour l\'instant' : n + (n > 1 ? ' lieux ajoutés' : ' lieu ajouté');
+  document.getElementById('btn-continuer-profil').disabled = n === 0;
 }
 
 function passerEtapePoints() {
@@ -576,6 +632,92 @@ boutonSupprimerPoint.addEventListener('click', function () {
 carte.on('click', function (e) {
   if (!modeAjoutPoint || modeDessin) return;
   ouvrirTiroirNouveauPoint(e.latlng);
+});
+
+/* ============================================================================
+   ÉTAPE 4 · profil de la personne qui répond
+   ========================================================================== */
+const LIEN_QUARTIER = [
+  { cle: 'habitant', label: 'Habitant·e' },
+  { cle: 'travailleur', label: 'Travailleur·se' },
+  { cle: 'etudiant', label: 'Élève / étudiant·e' },
+  { cle: 'usager', label: "Usager·ère d'un équipement (école, hôpital…)" },
+  { cle: 'passant', label: 'Passant·e' }
+];
+const GENRES = [
+  { cle: 'femme', label: 'Femme' },
+  { cle: 'homme', label: 'Homme' },
+  { cle: 'autre', label: 'Autre / je ne préfère pas dire' }
+];
+
+const ecranProfil = document.getElementById('ecran-profil');
+const grilleLien = document.getElementById('grille-lien');
+const grilleGenre = document.getElementById('grille-genre');
+const blocDuree = document.getElementById('bloc-duree');
+let profilLien = [];
+let profilGenre = [];
+
+function creerChipsProfil(conteneur, liste, selection, multiple, surChangement) {
+  liste.forEach(function (item) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip-categorie'; b.dataset.cle = item.cle;
+    b.setAttribute('aria-pressed', 'false');
+    b.textContent = item.label;
+    b.addEventListener('click', function () {
+      if (multiple) {
+        const i = selection.indexOf(item.cle);
+        if (i >= 0) selection.splice(i, 1); else selection.push(item.cle);
+      } else {
+        selection.length = 0;
+        selection.push(item.cle);
+      }
+      conteneur.querySelectorAll('.chip-categorie').forEach(function (autre) {
+        const actif = selection.indexOf(autre.dataset.cle) >= 0;
+        autre.setAttribute('aria-pressed', String(actif));
+        autre.style.background = actif ? 'var(--corail)' : '';
+        autre.style.borderColor = actif ? 'var(--corail)' : '';
+      });
+      surChangement && surChangement();
+    });
+    conteneur.appendChild(b);
+  });
+}
+creerChipsProfil(grilleLien, LIEN_QUARTIER, profilLien, true, function () {
+  blocDuree.hidden = profilLien.indexOf('habitant') === -1;
+});
+creerChipsProfil(grilleGenre, GENRES, profilGenre, false, null);
+
+document.getElementById('btn-continuer-profil').addEventListener('click', function () {
+  document.getElementById('carte').hidden = true;
+  barreInfo.hidden = true;
+  document.querySelector('.barre-bas').hidden = true;
+  ecranProfil.hidden = false;
+  pastilleEtape.textContent = 'Étape 4 · Et toi ?';
+  ecranProfil.scrollTop = 0;
+});
+
+document.getElementById('btn-retour-carte').addEventListener('click', function () {
+  ecranProfil.hidden = true;
+  document.getElementById('carte').hidden = false;
+  barreInfo.hidden = false;
+  document.querySelector('.barre-bas').hidden = false;
+  pastilleEtape.textContent = 'Étape 3 · Ajoute tes lieux';
+  carte.invalidateSize();
+});
+
+document.getElementById('btn-envoyer').addEventListener('click', function () {
+  const reponse = {
+    quartier: quartierPolygone ? quartierPolygone.getLatLngs()[0].map(function (p) { return [p.lat, p.lng]; }) : [],
+    lieux: points.map(function (p) { return { categories: p.categories, note: p.note, lat: p.lat, lng: p.lng }; }),
+    profil: {
+      age: document.getElementById('champ-age').value || null,
+      lien: profilLien.slice(),
+      duree: profilLien.indexOf('habitant') >= 0 ? document.getElementById('champ-duree').value : null,
+      genre: profilGenre.slice()
+    }
+  };
+  console.log('Réponse prête à être envoyée :', reponse);
+  alert("Presque ! L'enregistrement automatique arrive à la prochaine étape — pour l'instant, tes réponses sont visibles dans la console (F12) mais pas encore transmises.");
 });
 
 setTimeout(function () { carte.invalidateSize(); }, 150);
