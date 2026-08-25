@@ -1016,8 +1016,8 @@ const CoucheHaloConsensus = L.Layer.extend({
     d.cellules.forEach(function (c) {
         const t = c.n / d.maxN;
         const couleur = couleurConsensus(t);
-        const p1 = map.latLngToContainerPoint([d.latMin + c.i * d.tailleCase, d.lngMin + c.j * d.tailleCase]);
-        const p2 = map.latLngToContainerPoint([d.latMin + (c.i + 1) * d.tailleCase, d.lngMin + (c.j + 1) * d.tailleCase]);
+        const p1 = map.latLngToLayerPoint([d.latMin + c.i * d.tailleCase, d.lngMin + c.j * d.tailleCase]);
+        const p2 = map.latLngToLayerPoint([d.latMin + (c.i + 1) * d.tailleCase, d.lngMin + (c.j + 1) * d.tailleCase]);
         const x = Math.min(p1.x, p2.x) - origine.x, y = Math.min(p1.y, p2.y) - origine.y;
         const w = Math.abs(p2.x - p1.x) + 1, h = Math.abs(p2.y - p1.y) + 1;
         ctx.fillStyle = 'rgba(43,33,24,' + (0.16 + t * 0.14) + ')'; // fond sombre : garde le halo lisible sur n'importe quel fond de carte
