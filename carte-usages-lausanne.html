@@ -68,10 +68,26 @@ body{
 /* ---------- barre de filtres (espace chercheur) ---------- */
 .barre-filtres{
   flex:0 0 auto;background:var(--papier);border-bottom:1px solid var(--ligne);
-  padding:10px 16px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:15;
-  max-height:46vh;overflow-y:auto;
+  position:relative;z-index:15;
 }
 .barre-filtres[hidden]{display:none}
+.entete-filtres{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  background:none;border:none;padding:12px 16px;font-family:var(--texte);font-weight:800;font-size:13.5px;
+  color:var(--encre);cursor:pointer;
+}
+.entete-filtres #chevron-filtres{color:var(--encre-doux);transition:transform .15s}
+.entete-filtres.ouvert #chevron-filtres{transform:rotate(180deg)}
+.badge-filtres{
+  display:inline-block;margin-left:8px;background:var(--corail);color:#fff;border-radius:999px;
+  padding:1px 8px;font-size:11px;
+}
+.badge-filtres[hidden]{display:none}
+.corps-filtres{
+  padding:0 16px 14px;display:flex;flex-direction:column;gap:8px;
+  max-height:44vh;overflow-y:auto;border-top:1px solid var(--ligne);padding-top:12px;
+}
+.corps-filtres[hidden]{display:none}
 .groupe-filtre{display:flex;align-items:center;gap:10px;min-width:0}
 .rangee-filtres{
   display:flex;flex-wrap:nowrap;gap:6px;align-items:center;
@@ -107,7 +123,8 @@ main{flex:1 1 auto;position:relative;min-height:0}
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   box-shadow:0 -6px 16px -10px rgba(43,33,24,.3);position:relative;z-index:20;
 }
-.groupe-bas{display:flex;align-items:center;gap:10px;width:100%}
+.groupe-bas{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%}
+.groupe-bas .surface-info{flex:1 1 100px}
 .groupe-bas.colonne{flex-direction:column;align-items:stretch;gap:8px}
 .rangee-boutons{display:flex;gap:10px;width:100%}
 .rangee-boutons button{flex:1;justify-content:center}
@@ -204,27 +221,33 @@ textarea#note-point{
 </div>
 
 <div class="barre-filtres" id="barre-filtres-chercheur" hidden>
-  <div class="groupe-filtre">
-    <span class="etiquette-filtre">Usage</span>
-    <div class="rangee-filtres" id="rangee-filtres-usage"></div>
-  </div>
-  <div class="groupe-filtre">
-    <span class="etiquette-filtre">Âge</span>
-    <div class="rangee-filtres">
-      <input type="number" id="filtre-age-min" placeholder="min" class="champ-mini">
-      <span>–</span>
-      <input type="number" id="filtre-age-max" placeholder="max" class="champ-mini">
+  <button type="button" class="entete-filtres" id="btn-toggle-filtres">
+    <span>🔍 Filtres<span class="badge-filtres" id="badge-filtres-actifs" hidden>0</span></span>
+    <span id="chevron-filtres">▾</span>
+  </button>
+  <div class="corps-filtres" id="corps-filtres" hidden>
+    <div class="groupe-filtre">
+      <span class="etiquette-filtre">Usage</span>
+      <div class="rangee-filtres" id="rangee-filtres-usage"></div>
     </div>
+    <div class="groupe-filtre">
+      <span class="etiquette-filtre">Âge</span>
+      <div class="rangee-filtres">
+        <input type="number" id="filtre-age-min" placeholder="min" class="champ-mini">
+        <span>–</span>
+        <input type="number" id="filtre-age-max" placeholder="max" class="champ-mini">
+      </div>
+    </div>
+    <div class="groupe-filtre">
+      <span class="etiquette-filtre">Lien au quartier</span>
+      <div class="rangee-filtres" id="rangee-filtres-lien"></div>
+    </div>
+    <div class="groupe-filtre">
+      <span class="etiquette-filtre">Genre</span>
+      <div class="rangee-filtres" id="rangee-filtres-genre"></div>
+    </div>
+    <button type="button" class="lien-fermer" id="btn-reinit-filtres">↺ Réinitialiser les filtres</button>
   </div>
-  <div class="groupe-filtre">
-    <span class="etiquette-filtre">Lien au quartier</span>
-    <div class="rangee-filtres" id="rangee-filtres-lien"></div>
-  </div>
-  <div class="groupe-filtre">
-    <span class="etiquette-filtre">Genre</span>
-    <div class="rangee-filtres" id="rangee-filtres-genre"></div>
-  </div>
-  <button type="button" class="lien-fermer" id="btn-reinit-filtres">↺ Réinitialiser les filtres</button>
 </div>
 
 <main>
@@ -326,6 +349,7 @@ textarea#note-point{
     </div>
   </div>
   <div class="groupe-bas" id="groupe-chercheur" hidden>
+    <button type="button" class="bouton-flottant" id="btn-toggle-quartiers">👁️ Contours</button>
     <div class="surface-info" id="texte-stats-chercheur">0 réponse</div>
     <button type="button" class="bouton-flottant" id="btn-quitter-chercheur">← Quitter</button>
   </div>
@@ -890,9 +914,35 @@ const boutonConnexion = document.getElementById('btn-connexion');
 
 let jetonChercheur = null;
 let reponsesChercheur = [];
+let quartiersVisibles = true;
 const filtresChercheur = { usages: [], lien: [], genre: [] };
+const renduQuartiersCanvas = L.canvas({ padding: 0.4 });
 const coucheQuartiersChercheur = L.layerGroup();
 const couchePointsChercheur = L.layerGroup();
+
+function majBadgeFiltres() {
+  const ageMin = document.getElementById('filtre-age-min').value;
+  const ageMax = document.getElementById('filtre-age-max').value;
+  const n = filtresChercheur.usages.length + filtresChercheur.lien.length + filtresChercheur.genre.length
+    + (ageMin !== '' ? 1 : 0) + (ageMax !== '' ? 1 : 0);
+  const badge = document.getElementById('badge-filtres-actifs');
+  badge.textContent = String(n);
+  badge.hidden = n === 0;
+}
+
+const boutonToggleFiltres = document.getElementById('btn-toggle-filtres');
+const corpsFiltres = document.getElementById('corps-filtres');
+boutonToggleFiltres.addEventListener('click', function () {
+  corpsFiltres.hidden = !corpsFiltres.hidden;
+  boutonToggleFiltres.classList.toggle('ouvert', !corpsFiltres.hidden);
+});
+
+const boutonToggleQuartiers = document.getElementById('btn-toggle-quartiers');
+boutonToggleQuartiers.addEventListener('click', function () {
+  quartiersVisibles = !quartiersVisibles;
+  if (quartiersVisibles) { coucheQuartiersChercheur.addTo(carte); boutonToggleQuartiers.textContent = '👁️ Contours'; }
+  else { coucheQuartiersChercheur.remove(); boutonToggleQuartiers.textContent = '🚫 Contours'; }
+});
 
 function creerChipsFiltre(conteneur, liste, selection) {
   liste.forEach(function (item) {
@@ -906,6 +956,7 @@ function creerChipsFiltre(conteneur, liste, selection) {
       b.setAttribute('aria-pressed', String(selection.indexOf(item.cle) >= 0));
       b.style.background = selection.indexOf(item.cle) >= 0 ? (item.couleur || 'var(--corail)') : '';
       b.style.borderColor = selection.indexOf(item.cle) >= 0 ? (item.couleur || 'var(--corail)') : '';
+      majBadgeFiltres();
       dessinerDashboard();
     });
     conteneur.appendChild(b);
@@ -914,8 +965,8 @@ function creerChipsFiltre(conteneur, liste, selection) {
 creerChipsFiltre(document.getElementById('rangee-filtres-usage'), CATEGORIES, filtresChercheur.usages);
 creerChipsFiltre(document.getElementById('rangee-filtres-lien'), LIEN_QUARTIER, filtresChercheur.lien);
 creerChipsFiltre(document.getElementById('rangee-filtres-genre'), GENRES, filtresChercheur.genre);
-document.getElementById('filtre-age-min').addEventListener('input', dessinerDashboard);
-document.getElementById('filtre-age-max').addEventListener('input', dessinerDashboard);
+document.getElementById('filtre-age-min').addEventListener('input', function () { majBadgeFiltres(); dessinerDashboard(); });
+document.getElementById('filtre-age-max').addEventListener('input', function () { majBadgeFiltres(); dessinerDashboard(); });
 
 function masquerToutesLesVues() {
   document.getElementById('carte').hidden = true;
@@ -1002,6 +1053,10 @@ function afficherDashboard() {
   document.getElementById('carte').hidden = false;
   barreFiltresChercheur.hidden = false;
   groupeChercheur.hidden = false;
+  corpsFiltres.hidden = true;
+  boutonToggleFiltres.classList.remove('ouvert');
+  quartiersVisibles = true;
+  boutonToggleQuartiers.textContent = '👁️ Contours';
   coucheMarqueurs.remove();
   if (quartierPolygone) quartierPolygone.remove();
   coucheQuartiersChercheur.addTo(carte);
@@ -1059,7 +1114,9 @@ function dessinerDashboard() {
     if (!reponseCorrespondFiltres(r)) return;
     nAffichees++;
     if (r.quartier && r.quartier.length >= 3) {
-      L.polygon(r.quartier, { color: '#3FA9E0', weight: 2, fillColor: '#3FA9E0', fillOpacity: .07 }).addTo(coucheQuartiersChercheur);
+      L.polygon(r.quartier, {
+        renderer: renduQuartiersCanvas, stroke: false, fillColor: '#3FA9E0', fillOpacity: .10, interactive: false
+      }).addTo(coucheQuartiersChercheur);
     }
     (r.lieux || []).forEach(function (l) {
       if (filtresChercheur.usages.length && !l.categories.some(function (c) { return filtresChercheur.usages.indexOf(c) >= 0; })) return;
@@ -1079,6 +1136,7 @@ document.getElementById('btn-reinit-filtres').addEventListener('click', function
   barreFiltresChercheur.querySelectorAll('.chip-categorie').forEach(function (b) {
     b.setAttribute('aria-pressed', 'false'); b.style.background = ''; b.style.borderColor = '';
   });
+  majBadgeFiltres();
   dessinerDashboard();
 });
 
