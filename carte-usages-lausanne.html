@@ -206,6 +206,15 @@ textarea#note-point{
       <button type="button" class="bouton-flottant principal large" id="btn-envoyer">✓ Envoyer mes réponses</button>
     </div>
   </section>
+
+  <section class="ecran-profil" id="ecran-merci" hidden>
+    <div class="carte-profil" style="text-align:center;padding-top:15vh">
+      <div style="font-size:52px;margin-bottom:10px">🎉</div>
+      <h2>Merci !</h2>
+      <p class="sous-titre-profil">Ta réponse a bien été enregistrée.<br>Si tu veux, on peut noter la réponse d'une autre personne sur cet appareil.</p>
+      <button type="button" class="bouton-flottant principal large" id="btn-nouvelle-reponse">↺ Nouvelle réponse</button>
+    </div>
+  </section>
 </main>
 
 <section class="tiroir" id="tiroir-point" hidden>
@@ -705,20 +714,91 @@ document.getElementById('btn-retour-carte').addEventListener('click', function (
   carte.invalidateSize();
 });
 
-document.getElementById('btn-envoyer').addEventListener('click', function () {
+/* ============================================================================
+   ÉTAPE 5 · envoi automatique vers Supabase
+   ========================================================================== */
+const SUPABASE_URL = 'https://jdqfwvczpoyhcoobdido.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1knusv8he2AIiUwsbfGGeA_jOi8zUHu';
+
+const boutonEnvoyer = document.getElementById('btn-envoyer');
+const TEXTE_ENVOYER_DEFAUT = boutonEnvoyer.textContent;
+const ecranMerci = document.getElementById('ecran-merci');
+
+boutonEnvoyer.addEventListener('click', async function () {
+  const ageBrut = document.getElementById('champ-age').value;
   const reponse = {
     quartier: quartierPolygone ? quartierPolygone.getLatLngs()[0].map(function (p) { return [p.lat, p.lng]; }) : [],
     lieux: points.map(function (p) { return { categories: p.categories, note: p.note, lat: p.lat, lng: p.lng }; }),
-    profil: {
-      age: document.getElementById('champ-age').value || null,
-      lien: profilLien.slice(),
-      duree: profilLien.indexOf('habitant') >= 0 ? document.getElementById('champ-duree').value : null,
-      genre: profilGenre.slice()
-    }
+    age: ageBrut ? parseInt(ageBrut, 10) : null,
+    lien_quartier: profilLien.slice(),
+    duree_habitant: profilLien.indexOf('habitant') >= 0 ? (document.getElementById('champ-duree').value || null) : null,
+    genre: profilGenre.slice()
   };
-  console.log('Réponse prête à être envoyée :', reponse);
-  alert("Presque ! L'enregistrement automatique arrive à la prochaine étape — pour l'instant, tes réponses sont visibles dans la console (F12) mais pas encore transmises.");
+
+  boutonEnvoyer.disabled = true;
+  boutonEnvoyer.textContent = 'Envoi en cours…';
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/reponses', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify(reponse)
+    });
+    if (!res.ok) throw new Error('Le serveur a répondu ' + res.status);
+    ecranProfil.hidden = true;
+    ecranMerci.hidden = false;
+  } catch (err) {
+    alert("L'envoi a échoué (vérifie ta connexion internet) : " + err.message);
+  } finally {
+    boutonEnvoyer.disabled = false;
+    boutonEnvoyer.textContent = TEXTE_ENVOYER_DEFAUT;
+  }
 });
+
+function reinitialiserPourNouvelleReponse() {
+  if (quartierPolygone) { quartierPolygone.remove(); quartierPolygone = null; }
+  quartierValide = false;
+  points = [];
+  dessinerPoints();
+
+  document.getElementById('champ-age').value = '';
+  profilLien.length = 0;
+  profilGenre.length = 0;
+  [grilleLien, grilleGenre].forEach(function (grille) {
+    grille.querySelectorAll('.chip-categorie').forEach(function (b) {
+      b.setAttribute('aria-pressed', 'false');
+      b.style.background = ''; b.style.borderColor = '';
+    });
+  });
+  blocDuree.hidden = true;
+  document.getElementById('champ-duree').value = '';
+
+  ecranMerci.hidden = true;
+  ecranProfil.hidden = true;
+  document.getElementById('carte').hidden = false;
+  barreInfo.hidden = false;
+  document.querySelector('.barre-bas').hidden = false;
+
+  groupeCarte.hidden = false;
+  groupeQuartier.hidden = true;
+  groupePoints.hidden = true;
+  boutonDessiner.textContent = '✏️ Mon quartier';
+  boutonDessiner.classList.remove('sombre');
+  boutonRecentrer.hidden = false;
+
+  pastilleEtape.textContent = 'Étape 1 · Choisis ton coin de la ville';
+  texteInfo.textContent = MESSAGE_IDLE;
+  barreInfo.classList.remove('mode-dessin');
+
+  carte.flyTo(LAUSANNE_CENTRE, LAUSANNE_ZOOM_DEPART, { duration: 0.6 });
+  setTimeout(function () { carte.invalidateSize(); }, 200);
+}
+document.getElementById('btn-nouvelle-reponse').addEventListener('click', reinitialiserPourNouvelleReponse);
 
 setTimeout(function () { carte.invalidateSize(); }, 150);
 window.addEventListener('resize', function () { carte.invalidateSize(); });
