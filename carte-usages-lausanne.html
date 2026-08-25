@@ -1025,6 +1025,32 @@ function reponseCorrespondFiltres(r) {
   return true;
 }
 
+function echapperHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function libelleParListe(liste, cle) {
+  const it = liste.find(function (x) { return x.cle === cle; });
+  return it ? it.label : cle;
+}
+function contenuPopupPoint(l, r) {
+  const cats = l.categories.map(function (c) {
+    const cat = categorieParCle(c);
+    return cat ? cat.emoji + ' ' + echapperHtml(cat.label) : echapperHtml(c);
+  }).join('<br>');
+  const profil = [];
+  if (r.age != null) profil.push(r.age + ' ans');
+  if (r.lien_quartier && r.lien_quartier.length) profil.push(r.lien_quartier.map(function (k) { return libelleParListe(LIEN_QUARTIER, k); }).join(', '));
+  if (r.genre && r.genre.length) profil.push(r.genre.map(function (k) { return libelleParListe(GENRES, k); }).join(', '));
+  let html = '<div style="font-family:\'Nunito\',sans-serif;font-size:13px;max-width:220px">';
+  html += '<div style="font-weight:800;margin-bottom:5px">' + cats + '</div>';
+  if (l.note) html += '<div style="font-style:italic;color:#5C5248;margin-bottom:6px">« ' + echapperHtml(l.note) + ' »</div>';
+  if (profil.length) html += '<div style="font-size:11px;color:#8A7A68">' + echapperHtml(profil.join(' · ')) + '</div>';
+  html += '</div>';
+  return html;
+}
+
 function dessinerDashboard() {
   coucheQuartiersChercheur.clearLayers();
   couchePointsChercheur.clearLayers();
@@ -1037,7 +1063,9 @@ function dessinerDashboard() {
     }
     (r.lieux || []).forEach(function (l) {
       if (filtresChercheur.usages.length && !l.categories.some(function (c) { return filtresChercheur.usages.indexOf(c) >= 0; })) return;
-      L.marker([l.lat, l.lng], { icon: icônePoint(l.categories, false) }).addTo(couchePointsChercheur);
+      L.marker([l.lat, l.lng], { icon: icônePoint(l.categories, false) })
+        .bindPopup(contenuPopupPoint(l, r))
+        .addTo(couchePointsChercheur);
     });
   });
   const total = reponsesChercheur.length;
