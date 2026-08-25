@@ -349,7 +349,7 @@ textarea#note-point{
     </div>
   </div>
   <div class="groupe-bas" id="groupe-chercheur" hidden>
-    <button type="button" class="bouton-flottant" id="btn-toggle-quartiers">👁️ Contours</button>
+    <button type="button" class="bouton-flottant" id="btn-toggle-quartiers">👁️ Zones</button>
     <div class="surface-info" id="texte-stats-chercheur">0 réponse</div>
     <button type="button" class="bouton-flottant" id="btn-quitter-chercheur">← Quitter</button>
   </div>
@@ -917,8 +917,111 @@ let reponsesChercheur = [];
 let quartiersVisibles = true;
 const filtresChercheur = { usages: [], lien: [], genre: [] };
 const renduQuartiersCanvas = L.canvas({ padding: 0.4 });
-const coucheQuartiersChercheur = L.layerGroup();
 const couchePointsChercheur = L.layerGroup();
+
+/* ---- mise en valeur des zones consensuelles (halo flouté + % au survol) ---- */
+function dansPolygone(lat, lng, poly) {
+  let dedans = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1];
+    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) dedans = !dedans;
+  }
+  return dedans;
+}
+function calculerGrilleConsensus(polygones) {
+  if (!polygones.length) return null;
+  let latMin = Infinity, latMax = -Infinity, lngMin = Infinity, lngMax = -Infinity;
+  polygones.forEach(function (poly) {
+    poly.forEach(function (pt) {
+      if (pt[0] < latMin) latMin = pt[0]; if (pt[0] > latMax) latMax = pt[0];
+      if (pt[1] < lngMin) lngMin = pt[1]; if (pt[1] > lngMax) lngMax = pt[1];
+    });
+  });
+  const margeLat = (latMax - latMin) * 0.06 || 0.002, margeLng = (lngMax - lngMin) * 0.06 || 0.002;
+  latMin -= margeLat; latMax += margeLat; lngMin -= margeLng; lngMax += margeLng;
+  const cible = 90; // ~90 cases sur le plus grand côté, quel que soit l'étendue des données
+  const tailleCase = Math.max(latMax - latMin, lngMax - lngMin) / cible;
+  const nLig = Math.ceil((latMax - latMin) / tailleCase), nCol = Math.ceil((lngMax - lngMin) / tailleCase);
+  const grille = [];
+  for (let i = 0; i < nLig; i++) grille.push(new Array(nCol).fill(0));
+  polygones.forEach(function (poly) {
+    let plMin = Infinity, plMax = -Infinity, pnMin = Infinity, pnMax = -Infinity;
+    poly.forEach(function (pt) {
+      if (pt[0] < plMin) plMin = pt[0]; if (pt[0] > plMax) plMax = pt[0];
+      if (pt[1] < pnMin) pnMin = pt[1]; if (pt[1] > pnMax) pnMax = pt[1];
+    });
+    const i0 = Math.max(0, Math.floor((plMin - latMin) / tailleCase));
+    const i1 = Math.min(nLig - 1, Math.floor((plMax - latMin) / tailleCase));
+    const j0 = Math.max(0, Math.floor((pnMin - lngMin) / tailleCase));
+    const j1 = Math.min(nCol - 1, Math.floor((pnMax - lngMin) / tailleCase));
+    for (let i = i0; i <= i1; i++) {
+      for (let j = j0; j <= j1; j++) {
+        const clat = latMin + (i + 0.5) * tailleCase, clng = lngMin + (j + 0.5) * tailleCase;
+        if (dansPolygone(clat, clng, poly)) grille[i][j]++;
+      }
+    }
+  });
+  let maxN = 0;
+  for (let i = 0; i < nLig; i++) for (let j = 0; j < nCol; j++) if (grille[i][j] > maxN) maxN = grille[i][j];
+  return { grille: grille, latMin: latMin, lngMin: lngMin, tailleCase: tailleCase, nLig: nLig, nCol: nCol, maxN: maxN, total: polygones.length };
+}
+function couleurConsensus(t) {
+  if (t <= 0) return null;
+  if (t < 0.25) return '#BFE3F2';
+  if (t < 0.45) return '#8FCBE0';
+  if (t < 0.65) return '#FFC93C';
+  if (t < 0.85) return '#FF8A3D';
+  return '#FF5A46';
+}
+const CoucheHaloConsensus = L.Layer.extend({
+  onAdd: function (map) {
+    this._map = map;
+    this._toile = L.DomUtil.create('canvas', 'halo-consensus');
+    this._toile.style.position = 'absolute';
+    this._toile.style.pointerEvents = 'none';
+    this._toile.style.filter = 'blur(15px)';
+    map.getPanes().overlayPane.appendChild(this._toile);
+    map.on('moveend zoomend viewreset resize', this._redessiner, this);
+    this._redessiner();
+  },
+  onRemove: function (map) {
+    L.DomUtil.remove(this._toile);
+    map.off('moveend zoomend viewreset resize', this._redessiner, this);
+  },
+  definirDonnees: function (donnees) { this._donnees = donnees; this._redessiner(); },
+  _redessiner: function () {
+    if (!this._map) return;
+    const taille = this._map.getSize();
+    const origine = this._map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._toile, origine);
+    this._toile.width = taille.x; this._toile.height = taille.y;
+    this._toile.style.width = taille.x + 'px'; this._toile.style.height = taille.y + 'px';
+    const ctx = this._toile.getContext('2d');
+    ctx.clearRect(0, 0, taille.x, taille.y);
+    const d = this._donnees;
+    if (!d || !d.maxN) return;
+    for (let i = 0; i < d.nLig; i++) {
+      for (let j = 0; j < d.nCol; j++) {
+        const n = d.grille[i][j];
+        if (!n) continue;
+        const t = n / d.maxN;
+        const couleur = couleurConsensus(t);
+        const p1 = this._map.latLngToContainerPoint([d.latMin + i * d.tailleCase, d.lngMin + j * d.tailleCase]);
+        const p2 = this._map.latLngToContainerPoint([d.latMin + (i + 1) * d.tailleCase, d.lngMin + (j + 1) * d.tailleCase]);
+        const x = Math.min(p1.x, p2.x) - origine.x, y = Math.min(p1.y, p2.y) - origine.y;
+        const w = Math.abs(p2.x - p1.x) + 1, h = Math.abs(p2.y - p1.y) + 1;
+        ctx.fillStyle = 'rgba(43,33,24,' + (0.16 + t * 0.14) + ')'; // fond sombre : garde le halo lisible sur n'importe quel fond de carte
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = couleur;
+        ctx.globalAlpha = 0.72 + t * 0.26;
+        ctx.fillRect(x, y, w, h);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+});
+const coucheHaloConsensus = new CoucheHaloConsensus();
+const coucheZonesSondables = L.layerGroup(); // rectangles invisibles pour afficher le % exact au survol/clic
 
 function majBadgeFiltres() {
   const ageMin = document.getElementById('filtre-age-min').value;
@@ -940,8 +1043,13 @@ boutonToggleFiltres.addEventListener('click', function () {
 const boutonToggleQuartiers = document.getElementById('btn-toggle-quartiers');
 boutonToggleQuartiers.addEventListener('click', function () {
   quartiersVisibles = !quartiersVisibles;
-  if (quartiersVisibles) { coucheQuartiersChercheur.addTo(carte); boutonToggleQuartiers.textContent = '👁️ Contours'; }
-  else { coucheQuartiersChercheur.remove(); boutonToggleQuartiers.textContent = '🚫 Contours'; }
+  if (quartiersVisibles) {
+    coucheHaloConsensus.addTo(carte); coucheZonesSondables.addTo(carte);
+    boutonToggleQuartiers.textContent = '👁️ Zones';
+  } else {
+    coucheHaloConsensus.remove(); coucheZonesSondables.remove();
+    boutonToggleQuartiers.textContent = '🚫 Zones';
+  }
 });
 
 function creerChipsFiltre(conteneur, liste, selection) {
@@ -1009,7 +1117,8 @@ function restaurerVueRepondant() {
 }
 document.getElementById('btn-retour-carte-connexion').addEventListener('click', restaurerVueRepondant);
 document.getElementById('btn-quitter-chercheur').addEventListener('click', function () {
-  coucheQuartiersChercheur.remove();
+  coucheHaloConsensus.remove();
+  coucheZonesSondables.remove();
   couchePointsChercheur.remove();
   coucheMarqueurs.addTo(carte);
   if (quartierPolygone) quartierPolygone.addTo(carte);
@@ -1056,10 +1165,11 @@ function afficherDashboard() {
   corpsFiltres.hidden = true;
   boutonToggleFiltres.classList.remove('ouvert');
   quartiersVisibles = true;
-  boutonToggleQuartiers.textContent = '👁️ Contours';
+  boutonToggleQuartiers.textContent = '👁️ Zones';
   coucheMarqueurs.remove();
   if (quartierPolygone) quartierPolygone.remove();
-  coucheQuartiersChercheur.addTo(carte);
+  coucheHaloConsensus.addTo(carte);
+  coucheZonesSondables.addTo(carte);
   couchePointsChercheur.addTo(carte);
   dessinerDashboard();
   carte.invalidateSize();
@@ -1107,17 +1217,14 @@ function contenuPopupPoint(l, r) {
 }
 
 function dessinerDashboard() {
-  coucheQuartiersChercheur.clearLayers();
+  coucheZonesSondables.clearLayers();
   couchePointsChercheur.clearLayers();
   let nAffichees = 0;
+  const quartiersRetenus = [];
   reponsesChercheur.forEach(function (r) {
     if (!reponseCorrespondFiltres(r)) return;
     nAffichees++;
-    if (r.quartier && r.quartier.length >= 3) {
-      L.polygon(r.quartier, {
-        renderer: renduQuartiersCanvas, stroke: false, fillColor: '#3FA9E0', fillOpacity: .10, interactive: false
-      }).addTo(coucheQuartiersChercheur);
-    }
+    if (r.quartier && r.quartier.length >= 3) quartiersRetenus.push(r.quartier);
     (r.lieux || []).forEach(function (l) {
       if (filtresChercheur.usages.length && !l.categories.some(function (c) { return filtresChercheur.usages.indexOf(c) >= 0; })) return;
       L.marker([l.lat, l.lng], { icon: icônePoint(l.categories, false) })
@@ -1127,6 +1234,23 @@ function dessinerDashboard() {
   });
   const total = reponsesChercheur.length;
   texteStatsChercheur.textContent = nAffichees + ' réponse' + (nAffichees > 1 ? 's' : '') + ' affichée' + (nAffichees > 1 ? 's' : '') + ' sur ' + total;
+
+  const grilleConsensus = calculerGrilleConsensus(quartiersRetenus);
+  coucheHaloConsensus.definirDonnees(grilleConsensus);
+  if (grilleConsensus) {
+    const d = grilleConsensus;
+    for (let i = 0; i < d.nLig; i++) {
+      for (let j = 0; j < d.nCol; j++) {
+        const n = d.grille[i][j];
+        if (!n) continue;
+        const bounds = [[d.latMin + i * d.tailleCase, d.lngMin + j * d.tailleCase], [d.latMin + (i + 1) * d.tailleCase, d.lngMin + (j + 1) * d.tailleCase]];
+        const pct = Math.round(n / quartiersRetenus.length * 100);
+        L.rectangle(bounds, { renderer: renduQuartiersCanvas, stroke: false, fillOpacity: 0.001, fillColor: '#000' })
+          .bindTooltip(pct + '% du quartier ressenti par les répondant·e·s (' + n + ' sur ' + quartiersRetenus.length + ')', { sticky: true })
+          .addTo(coucheZonesSondables);
+      }
+    }
+  }
 }
 
 document.getElementById('btn-reinit-filtres').addEventListener('click', function () {
