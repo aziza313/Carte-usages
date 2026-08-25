@@ -35,7 +35,7 @@ body{
 /* ---------- bandeau ---------- */
 .bandeau{
   background:var(--corail);color:#fff;flex:0 0 auto;
-  display:flex;align-items:center;gap:12px;padding:12px 18px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 18px;
   box-shadow:var(--ombre);position:relative;z-index:20;
 }
 .bandeau .bulle{
@@ -50,6 +50,11 @@ body{
   font-family:var(--texte);font-weight:800;font-size:12px;background:rgba(255,255,255,.22);
   color:#fff;padding:6px 12px;border-radius:999px;white-space:nowrap;
 }
+.lien-chercheur{
+  background:rgba(255,255,255,.22);border:none;border-radius:50%;width:32px;height:32px;
+  font-size:14px;cursor:pointer;color:#fff;flex:0 0 auto;
+}
+.lien-chercheur:hover{background:rgba(255,255,255,.34)}
 
 /* ---------- barre d'info (flux normal, sous le bandeau) ---------- */
 .barre-info{
@@ -59,6 +64,26 @@ body{
 .barre-info strong{color:var(--encre);font-family:var(--titre);font-weight:600;margin-right:6px}
 .barre-info.mode-dessin{background:var(--encre);color:#fff;border-bottom-color:var(--encre)}
 .barre-info.mode-dessin strong{color:#fff}
+
+/* ---------- barre de filtres (espace chercheur) ---------- */
+.barre-filtres{
+  flex:0 0 auto;background:var(--papier);border-bottom:1px solid var(--ligne);
+  padding:10px 16px;display:flex;flex-direction:column;gap:8px;position:relative;z-index:15;
+  max-height:46vh;overflow-y:auto;
+}
+.barre-filtres[hidden]{display:none}
+.groupe-filtre{display:flex;align-items:center;gap:10px;min-width:0}
+.rangee-filtres{
+  display:flex;flex-wrap:nowrap;gap:6px;align-items:center;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 4px;min-width:0;
+}
+.etiquette-filtre{
+  font-family:var(--texte);font-weight:800;font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--encre-doux);flex:0 0 auto;width:92px;
+}
+.champ-mini{width:64px;flex:0 0 auto;border:2px solid var(--ligne);border-radius:9px;padding:6px 8px;font-family:var(--texte);font-size:13px}
+.barre-filtres .chip-categorie{padding:6px 11px;font-size:12px;flex:0 0 auto}
+#btn-reinit-filtres{align-self:flex-end;color:var(--corail);font-weight:800}
 
 /* ---------- carte (occupe tout l'espace restant) ---------- */
 main{flex:1 1 auto;position:relative;min-height:0}
@@ -154,6 +179,11 @@ textarea#note-point{
   font-size:15px;color:var(--encre);background:var(--papier);
 }
 #btn-envoyer{width:100%;justify-content:center;margin-top:28px;padding:14px 18px;font-size:14.5px}
+#btn-connexion{width:100%;justify-content:center;margin-top:24px;padding:14px 18px;font-size:14.5px}
+.erreur-connexion{
+  color:#B2264A;background:#FBE7EC;border-radius:10px;padding:9px 12px;font-size:13px;margin-top:16px;
+}
+.erreur-connexion[hidden]{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -164,12 +194,37 @@ textarea#note-point{
   <h1>Carte des usages<span>Ville de Lausanne</span></h1>
   <div class="pousse">
     <span class="pastille-etape" id="pastille-etape">Étape 1 · Choisis ton coin de la ville</span>
+    <button type="button" class="lien-chercheur" id="btn-mode-chercheur" title="Espace chercheur">🔒</button>
   </div>
 </header>
 
 <div class="barre-info" id="barre-info">
   <strong>Zoome sur ton coin</strong>
   <span id="texte-info">Balade-toi sur la carte et rapproche-toi de l'endroit dont tu veux parler, puis touche « Mon quartier » en bas.</span>
+</div>
+
+<div class="barre-filtres" id="barre-filtres-chercheur" hidden>
+  <div class="groupe-filtre">
+    <span class="etiquette-filtre">Usage</span>
+    <div class="rangee-filtres" id="rangee-filtres-usage"></div>
+  </div>
+  <div class="groupe-filtre">
+    <span class="etiquette-filtre">Âge</span>
+    <div class="rangee-filtres">
+      <input type="number" id="filtre-age-min" placeholder="min" class="champ-mini">
+      <span>–</span>
+      <input type="number" id="filtre-age-max" placeholder="max" class="champ-mini">
+    </div>
+  </div>
+  <div class="groupe-filtre">
+    <span class="etiquette-filtre">Lien au quartier</span>
+    <div class="rangee-filtres" id="rangee-filtres-lien"></div>
+  </div>
+  <div class="groupe-filtre">
+    <span class="etiquette-filtre">Genre</span>
+    <div class="rangee-filtres" id="rangee-filtres-genre"></div>
+  </div>
+  <button type="button" class="lien-fermer" id="btn-reinit-filtres">↺ Réinitialiser les filtres</button>
 </div>
 
 <main>
@@ -215,6 +270,25 @@ textarea#note-point{
       <button type="button" class="bouton-flottant principal large" id="btn-nouvelle-reponse">↺ Nouvelle réponse</button>
     </div>
   </section>
+
+  <section class="ecran-profil" id="ecran-connexion" hidden>
+    <div class="carte-profil">
+      <button type="button" class="lien-fermer" id="btn-retour-carte-connexion">← Retour à la carte</button>
+      <p class="oeil-profil">Espace chercheur</p>
+      <h2>Connexion</h2>
+      <p class="sous-titre-profil">Réservé à l'équipe d'enquête. Le compte se crée dans Supabase, pas ici.</p>
+
+      <label class="etiquette-champ" for="champ-email">Email</label>
+      <input type="email" id="champ-email" class="champ-texte" autocomplete="username">
+
+      <label class="etiquette-champ" for="champ-mdp">Mot de passe</label>
+      <input type="password" id="champ-mdp" class="champ-texte" autocomplete="current-password">
+
+      <p class="erreur-connexion" id="erreur-connexion" hidden></p>
+
+      <button type="button" class="bouton-flottant principal large" id="btn-connexion">Se connecter</button>
+    </div>
+  </section>
 </main>
 
 <section class="tiroir" id="tiroir-point" hidden>
@@ -250,6 +324,10 @@ textarea#note-point{
       <button type="button" class="bouton-flottant" id="btn-ajouter-point">➕ Ajouter un lieu</button>
       <button type="button" class="bouton-flottant principal" id="btn-continuer-profil" disabled>Continuer →</button>
     </div>
+  </div>
+  <div class="groupe-bas" id="groupe-chercheur" hidden>
+    <div class="surface-info" id="texte-stats-chercheur">0 réponse</div>
+    <button type="button" class="bouton-flottant" id="btn-quitter-chercheur">← Quitter</button>
   </div>
 </footer>
 
@@ -799,6 +877,182 @@ function reinitialiserPourNouvelleReponse() {
   setTimeout(function () { carte.invalidateSize(); }, 200);
 }
 document.getElementById('btn-nouvelle-reponse').addEventListener('click', reinitialiserPourNouvelleReponse);
+
+/* ============================================================================
+   ÉTAPE 6 · espace chercheur (tableau de bord)
+   ========================================================================== */
+const ecranConnexion = document.getElementById('ecran-connexion');
+const barreFiltresChercheur = document.getElementById('barre-filtres-chercheur');
+const groupeChercheur = document.getElementById('groupe-chercheur');
+const texteStatsChercheur = document.getElementById('texte-stats-chercheur');
+const erreurConnexion = document.getElementById('erreur-connexion');
+const boutonConnexion = document.getElementById('btn-connexion');
+
+let jetonChercheur = null;
+let reponsesChercheur = [];
+const filtresChercheur = { usages: [], lien: [], genre: [] };
+const coucheQuartiersChercheur = L.layerGroup();
+const couchePointsChercheur = L.layerGroup();
+
+function creerChipsFiltre(conteneur, liste, selection) {
+  liste.forEach(function (item) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip-categorie'; b.dataset.cle = item.cle;
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = item.emoji ? '<span class="puce">' + item.emoji + '</span>' + item.label : item.label;
+    b.addEventListener('click', function () {
+      const i = selection.indexOf(item.cle);
+      if (i >= 0) selection.splice(i, 1); else selection.push(item.cle);
+      b.setAttribute('aria-pressed', String(selection.indexOf(item.cle) >= 0));
+      b.style.background = selection.indexOf(item.cle) >= 0 ? (item.couleur || 'var(--corail)') : '';
+      b.style.borderColor = selection.indexOf(item.cle) >= 0 ? (item.couleur || 'var(--corail)') : '';
+      dessinerDashboard();
+    });
+    conteneur.appendChild(b);
+  });
+}
+creerChipsFiltre(document.getElementById('rangee-filtres-usage'), CATEGORIES, filtresChercheur.usages);
+creerChipsFiltre(document.getElementById('rangee-filtres-lien'), LIEN_QUARTIER, filtresChercheur.lien);
+creerChipsFiltre(document.getElementById('rangee-filtres-genre'), GENRES, filtresChercheur.genre);
+document.getElementById('filtre-age-min').addEventListener('input', dessinerDashboard);
+document.getElementById('filtre-age-max').addEventListener('input', dessinerDashboard);
+
+function masquerToutesLesVues() {
+  document.getElementById('carte').hidden = true;
+  ecranProfil.hidden = true;
+  ecranMerci.hidden = true;
+  ecranConnexion.hidden = true;
+  barreInfo.hidden = true;
+  barreFiltresChercheur.hidden = true;
+  groupeCarte.hidden = true;
+  groupeQuartier.hidden = true;
+  groupePoints.hidden = true;
+  groupeChercheur.hidden = true;
+}
+
+let etatAvantChercheur = null;
+document.getElementById('btn-mode-chercheur').addEventListener('click', function () {
+  etatAvantChercheur = {
+    groupeCarte: groupeCarte.hidden, groupeQuartier: groupeQuartier.hidden, groupePoints: groupePoints.hidden,
+    ecranProfil: ecranProfil.hidden, ecranMerci: ecranMerci.hidden
+  };
+  masquerToutesLesVues();
+  erreurConnexion.hidden = true;
+  document.getElementById('champ-mdp').value = '';
+  ecranConnexion.hidden = false;
+});
+
+function restaurerVueRepondant() {
+  masquerToutesLesVues();
+  document.getElementById('carte').hidden = false;
+  if (etatAvantChercheur && (!etatAvantChercheur.ecranProfil || !etatAvantChercheur.ecranMerci)) {
+    ecranProfil.hidden = etatAvantChercheur.ecranProfil;
+    ecranMerci.hidden = etatAvantChercheur.ecranMerci;
+  } else {
+    barreInfo.hidden = false;
+    groupeCarte.hidden = etatAvantChercheur ? etatAvantChercheur.groupeCarte : false;
+    groupeQuartier.hidden = etatAvantChercheur ? etatAvantChercheur.groupeQuartier : true;
+    groupePoints.hidden = etatAvantChercheur ? etatAvantChercheur.groupePoints : true;
+  }
+  carte.invalidateSize();
+}
+document.getElementById('btn-retour-carte-connexion').addEventListener('click', restaurerVueRepondant);
+document.getElementById('btn-quitter-chercheur').addEventListener('click', function () {
+  coucheQuartiersChercheur.remove();
+  couchePointsChercheur.remove();
+  coucheMarqueurs.addTo(carte);
+  if (quartierPolygone) quartierPolygone.addTo(carte);
+  restaurerVueRepondant();
+});
+
+boutonConnexion.addEventListener('click', async function () {
+  const email = document.getElementById('champ-email').value.trim();
+  const motDePasse = document.getElementById('champ-mdp').value;
+  erreurConnexion.hidden = true;
+  boutonConnexion.disabled = true;
+  boutonConnexion.textContent = 'Connexion…';
+  try {
+    const resAuth = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: motDePasse })
+    });
+    const donneesAuth = await resAuth.json();
+    if (!resAuth.ok) throw new Error(donneesAuth.error_description || donneesAuth.msg || 'Email ou mot de passe incorrect.');
+    jetonChercheur = donneesAuth.access_token;
+
+    const resDonnees = await fetch(SUPABASE_URL + '/rest/v1/reponses?select=*', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + jetonChercheur }
+    });
+    if (!resDonnees.ok) throw new Error('Impossible de charger les réponses (erreur ' + resDonnees.status + ').');
+    reponsesChercheur = await resDonnees.json();
+
+    afficherDashboard();
+  } catch (err) {
+    erreurConnexion.textContent = err.message;
+    erreurConnexion.hidden = false;
+  } finally {
+    boutonConnexion.disabled = false;
+    boutonConnexion.textContent = 'Se connecter';
+  }
+});
+
+function afficherDashboard() {
+  masquerToutesLesVues();
+  document.getElementById('carte').hidden = false;
+  barreFiltresChercheur.hidden = false;
+  groupeChercheur.hidden = false;
+  coucheMarqueurs.remove();
+  if (quartierPolygone) quartierPolygone.remove();
+  coucheQuartiersChercheur.addTo(carte);
+  couchePointsChercheur.addTo(carte);
+  dessinerDashboard();
+  carte.invalidateSize();
+}
+
+function reponseCorrespondFiltres(r) {
+  const ageMin = document.getElementById('filtre-age-min').value;
+  const ageMax = document.getElementById('filtre-age-max').value;
+  if (filtresChercheur.lien.length && !filtresChercheur.lien.some(function (l) { return (r.lien_quartier || []).indexOf(l) >= 0; })) return false;
+  if (filtresChercheur.genre.length && !filtresChercheur.genre.some(function (g) { return (r.genre || []).indexOf(g) >= 0; })) return false;
+  if (ageMin !== '' && (r.age == null || r.age < parseInt(ageMin, 10))) return false;
+  if (ageMax !== '' && (r.age == null || r.age > parseInt(ageMax, 10))) return false;
+  if (filtresChercheur.usages.length) {
+    const usagesReponse = [];
+    (r.lieux || []).forEach(function (l) { (l.categories || []).forEach(function (c) { usagesReponse.push(c); }); });
+    if (!filtresChercheur.usages.some(function (u) { return usagesReponse.indexOf(u) >= 0; })) return false;
+  }
+  return true;
+}
+
+function dessinerDashboard() {
+  coucheQuartiersChercheur.clearLayers();
+  couchePointsChercheur.clearLayers();
+  let nAffichees = 0;
+  reponsesChercheur.forEach(function (r) {
+    if (!reponseCorrespondFiltres(r)) return;
+    nAffichees++;
+    if (r.quartier && r.quartier.length >= 3) {
+      L.polygon(r.quartier, { color: '#3FA9E0', weight: 2, fillColor: '#3FA9E0', fillOpacity: .07 }).addTo(coucheQuartiersChercheur);
+    }
+    (r.lieux || []).forEach(function (l) {
+      if (filtresChercheur.usages.length && !l.categories.some(function (c) { return filtresChercheur.usages.indexOf(c) >= 0; })) return;
+      L.marker([l.lat, l.lng], { icon: icônePoint(l.categories, false) }).addTo(couchePointsChercheur);
+    });
+  });
+  const total = reponsesChercheur.length;
+  texteStatsChercheur.textContent = nAffichees + ' réponse' + (nAffichees > 1 ? 's' : '') + ' affichée' + (nAffichees > 1 ? 's' : '') + ' sur ' + total;
+}
+
+document.getElementById('btn-reinit-filtres').addEventListener('click', function () {
+  filtresChercheur.usages.length = 0; filtresChercheur.lien.length = 0; filtresChercheur.genre.length = 0;
+  document.getElementById('filtre-age-min').value = '';
+  document.getElementById('filtre-age-max').value = '';
+  barreFiltresChercheur.querySelectorAll('.chip-categorie').forEach(function (b) {
+    b.setAttribute('aria-pressed', 'false'); b.style.background = ''; b.style.borderColor = '';
+  });
+  dessinerDashboard();
+});
 
 setTimeout(function () { carte.invalidateSize(); }, 150);
 window.addEventListener('resize', function () { carte.invalidateSize(); });
