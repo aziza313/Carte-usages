@@ -1,0 +1,536 @@
+/* ============================================================================
+   BIDON OU BÉTON ? — feuille de style
+   Palette nommée, typographie, mise en page, décor pixel, animations.
+   ============================================================================ */
+
+:root {
+  /* Palette — couleurs de Lausanne, pensées pour rester lisibles en plein soleil */
+  --lac: #1f5c77;         /* bleu lac — couleur primaire */
+  --lac-clair: #8fc1d6;   /* bleu lac clair — fonds, eau */
+  --m2: #356b3f;          /* vert m2 — accent, boutons, bonne réponse (assombri pour l'AA en texte/bouton ;
+                             le décor pixel du wagon utilise un vert plus clair, #4c9a5b, réservé au non-textuel) */
+  --gres: #c99a5b;        /* grès cathédrale — silhouettes, fonds chauds */
+  --parasol: #e8b93f;     /* jaune parasol — bonne réponse, mise en avant */
+  --store: #c0392b;       /* rouge store — mauvaise réponse, alerte discrète */
+  --blanc-casse: #f5f0e6; /* blanc cassé — fond principal */
+  --anthracite: #2b2b2e;  /* anthracite — texte, contours */
+  --pierre: #6e6b66;      /* gris pierre — bordures, texte secondaire (assombri pour l'AA) */
+
+  --px: 4px; /* module pixel de base pour les bordures et reliefs "8-bit" */
+
+  --font-pixel: ui-monospace, "Cascadia Code", "Cascadia Mono", "Courier New", monospace;
+  --font-text: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --radius: 2px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--blanc-casse);
+  color: var(--anthracite);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  margin: 0;
+}
+
+p {
+  margin: 0 0 0.75em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus visible, contraste élevé, jamais supprimé */
+:focus-visible {
+  outline: 3px solid var(--parasol);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Titres en "pixel maison" : aucune police externe. L'effet 8-bit vient
+   d'une pile monospace + majuscules + un double text-shadow en escalier.
+   --------------------------------------------------------------------------- */
+.pixel-title {
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--anthracite);
+  text-shadow:
+    2px 0 0 var(--blanc-casse),
+    2px 2px 0 var(--anthracite),
+    4px 4px 0 var(--gres);
+  line-height: 1.25;
+}
+
+.pixel-label {
+  font-family: var(--font-pixel);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   Structure générale
+   --------------------------------------------------------------------------- */
+#app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 1rem;
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+/* Emplacement réservé au logo officiel */
+.logo-slot {
+  border: 2px dashed var(--pierre);
+  border-radius: var(--radius);
+  color: var(--pierre);
+  font-family: var(--font-text);
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.credit {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--pierre);
+  padding: 0.75rem 1rem 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------------------------------------------------------------------------
+   Boutons — reliefs "8-bit" via box-shadow en escaliers, coins nets,
+   zones tactiles généreuses (min 56px de hauteur)
+   --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.22),
+    inset 0 4px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 80ms ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.btn-primary {
+  background: var(--m2);
+  color: var(--blanc-casse);
+}
+
+.btn-secondary {
+  background: var(--lac);
+  color: var(--blanc-casse);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--lac);
+  box-shadow: inset 0 0 0 2px var(--lac);
+}
+
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Écran d'accueil
+   --------------------------------------------------------------------------- */
+#screen-home {
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding-top: 1rem;
+}
+
+#screen-home .pixel-title {
+  font-size: clamp(1.9rem, 9vw, 2.6rem);
+  margin: 0.5rem 0;
+}
+
+.home-rules {
+  font-size: 1.02rem;
+  color: var(--anthracite);
+  max-width: 32ch;
+  margin: 0 auto 1rem;
+}
+
+.home-replay-note {
+  font-size: 0.85rem;
+  color: var(--lac);
+  min-height: 1.2em;
+}
+
+/* ---------------------------------------------------------------------------
+   Écran de jeu — compteur de manche, minuteur, question, réponses
+   --------------------------------------------------------------------------- */
+#screen-game {
+  padding-top: 0.75rem;
+  gap: 0.5rem;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.round-counter {
+  font-size: 0.95rem;
+  color: var(--lac);
+}
+
+.timer-value {
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--anthracite);
+  min-width: 2ch;
+  text-align: right;
+}
+
+.timer-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(138, 134, 128, 0.25);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.timer-fill {
+  height: 100%;
+  background: var(--m2);
+  width: 100%;
+  transform-origin: left;
+}
+
+.question-prompt {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.9rem;
+}
+
+.answers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.answer-btn {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 2px solid var(--pierre);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  min-height: 56px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.answer-btn:hover:not([disabled]) {
+  border-color: var(--lac);
+}
+
+.answer-btn .tag {
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+/* États après révélation */
+.answer-btn[data-state="correct"] {
+  border-color: var(--m2);
+  background: rgba(76, 154, 91, 0.12);
+}
+.answer-btn[data-state="correct"] .tag {
+  visibility: visible;
+  background: var(--m2);
+  color: #fff;
+}
+
+.answer-btn[data-state="wrong"],
+.answer-btn[data-state="chosen-wrong"] {
+  border-color: var(--store);
+  background: rgba(192, 57, 43, 0.08);
+  opacity: 0.85;
+}
+.answer-btn[data-state="wrong"] .tag,
+.answer-btn[data-state="chosen-wrong"] .tag {
+  visibility: visible;
+  background: var(--store);
+  color: #fff;
+}
+
+.answer-btn[data-state="chosen-wrong"] {
+  border-width: 3px;
+  opacity: 1;
+}
+
+.answer-explanation {
+  font-size: 0.9rem;
+  color: var(--anthracite);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--pierre);
+}
+
+.answer-btn[disabled] {
+  cursor: default;
+}
+
+.game-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Écran final
+   --------------------------------------------------------------------------- */
+#screen-final {
+  justify-content: center;
+  text-align: center;
+  gap: 0.4rem;
+  padding-top: 1rem;
+}
+
+.final-avatar {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 0.25rem;
+  image-rendering: pixelated;
+}
+
+.final-profile-name {
+  font-size: clamp(1.4rem, 7vw, 1.9rem);
+  margin-bottom: 0.15rem;
+}
+
+.final-tagline {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.final-score {
+  font-size: 0.9rem;
+  color: var(--lac);
+  margin-bottom: 0.9rem;
+}
+
+.final-message {
+  font-size: 0.98rem;
+  margin-bottom: 0.9rem;
+}
+
+.final-deadline {
+  background: rgba(201, 154, 91, 0.18);
+  border: 2px solid var(--gres);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+}
+
+.final-deadline strong {
+  display: block;
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.share-status {
+  font-size: 0.85rem;
+  color: var(--m2);
+  min-height: 1.2em;
+}
+
+/* ---------------------------------------------------------------------------
+   Décor — horizon pixel fixe (lac, marché, pente, tour, cathédrale, M2)
+   L'élément signature : le M2 grimpe la pente d'une station par manche.
+   --------------------------------------------------------------------------- */
+.horizon-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  height: 34vh;
+  max-height: 260px;
+  transition: height 300ms ease;
+}
+
+.horizon-wrap.horizon--compact {
+  height: 20vh;
+  max-height: 150px;
+}
+
+/* Sur l'écran final, le décor rejoint le flux normal de la page (au lieu
+   d'être fixé à l'écran) : le contenu peut varier en hauteur sans jamais
+   passer sous le décor. */
+.horizon-wrap.horizon--docked {
+  position: static;
+  height: 26vh;
+  max-height: 190px;
+  margin-top: 1.25rem;
+  pointer-events: none;
+}
+
+#horizon-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  shape-rendering: crispEdges;
+}
+
+/* Laisse toujours un peu d'air entre le contenu et le décor fixe */
+#screen-home {
+  padding-bottom: 36vh;
+}
+#screen-game {
+  padding-bottom: 22vh;
+}
+#screen-final {
+  padding-bottom: 1rem;
+}
+
+#m2-train {
+  transition: transform 650ms ease;
+}
+
+.seagull {
+  animation: fly 14s linear infinite;
+}
+
+@keyframes fly {
+  0%   { transform: translate(-10px, 0); }
+  100% { transform: translate(340px, -6px); }
+}
+
+.awning {
+  transform-origin: top center;
+  animation: flap 3.2s ease-in-out infinite;
+}
+
+@keyframes flap {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(2deg); }
+}
+
+.wave {
+  animation: ripple 5s ease-in-out infinite;
+}
+
+@keyframes ripple {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #m2-train,
+  .seagull,
+  .awning,
+  .wave {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Petits écrans (360px et au-delà)
+   --------------------------------------------------------------------------- */
+@media (max-width: 360px) {
+  body {
+    font-size: 16px;
+  }
+  #app {
+    padding: 0 0.75rem;
+  }
+}
